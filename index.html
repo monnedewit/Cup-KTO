@@ -461,7 +461,6 @@ const DEFAULT_CLUBS = [
   "De Toekomst",
   "Java",
   "Java & Kolkersveld",
-  "KV Mander",
   "Lattrop Breklenkamp",
   "Lemselo",
   "Mander",
@@ -859,6 +858,37 @@ function createDefaultWedstrijddagen() {
     { ronde: "Halve Finale – Wed 1, Wed 2 & Beslissing", veteranen: "Woensdag (19:15 uur)", senioren: "Donderdag (19:30 uur)", junioren: "Maandag (19:00 uur)" },
     { ronde: "Finaledag (Alle klassen)", veteranen: "Zondag 13:30 uur", senioren: "Zondag 15:00 uur", junioren: "Zondag 09:30 / 10:30 / 11:45" }
   ];
+}
+
+
+function syncClubsAndRegistrations() {
+  if (!Array.isArray(appData.clubs)) appData.clubs = [...DEFAULT_CLUBS];
+  // Verwijder eventueel dubbel "KV Mander" als "Mander" al bestaat
+  if (appData.clubs.includes("Mander") && appData.clubs.includes("KV Mander")) {
+    appData.clubs = appData.clubs.filter(c => c !== "KV Mander");
+  }
+  if (!Array.isArray(appData.registrations)) {
+    appData.registrations = DEFAULT_REGISTRATIONS_2026.map(r => ({
+      ...r, sen: false, vet: false, jCup: false, jA: false, jB: false
+    }));
+  }
+  // Zorg dat elke vereniging uit appData.clubs ook in appData.registrations staat
+  appData.clubs.forEach(clubName => {
+    if (!appData.registrations.some(r => r.club === clubName)) {
+      appData.registrations.push({
+        club: clubName, sen: false, vet: false, jCup: false, jA: false, jB: false,
+        contact: "", phone: "", email: "", note: ""
+      });
+    }
+  });
+  // Zorg dat elke vereniging uit appData.registrations ook in appData.clubs staat
+  appData.registrations.forEach(r => {
+    if (r.club && !appData.clubs.includes(r.club)) {
+      appData.clubs.push(r.club);
+    }
+  });
+  appData.clubs.sort();
+  appData.registrations.sort((a, b) => a.club.localeCompare(b.club));
 }
 
 function ensureSeasonExtensions(dataObj, seasonLabel) {
@@ -1310,6 +1340,12 @@ async function promptRenameClub(oldName) {
   if (Array.isArray(lotingState.selectedClubs)) {
     lotingState.selectedClubs = lotingState.selectedClubs.map(c => c === oldName ? cleanNew : c);
   }
+  if (Array.isArray(appData.registrations)) {
+    appData.registrations.forEach(r => {
+      if (r.club === oldName) r.club = cleanNew;
+    });
+  }
+  syncClubsAndRegistrations();
 
   await saveState();
   renderClubsModalList();
@@ -1335,8 +1371,9 @@ async function addNewClub() {
 
 async function removeClub(name) {
   if (!currentUser) return;
-  if (confirm(`Vereniging "${name}" verwijderen uit de keuzelijst?`)) {
+  if (confirm(`Vereniging "${name}" verwijderen uit zowel de keuzelijst als de inschrijvingen?`)) {
     appData.clubs = (appData.clubs || DEFAULT_CLUBS).filter(c => c !== name);
+    appData.registrations = (appData.registrations || []).filter(r => r.club !== name);
     lotingState.selectedClubs = (lotingState.selectedClubs || []).filter(c => c !== name);
     await saveState();
     renderClubsModalList();
@@ -2394,7 +2431,8 @@ function initLotingForCat(cat) {
   if (regClubs.length > 0) {
     lotingState.selectedClubs = [...regClubs];
   } else {
-    const allClubs = [...(appData.clubs || DEFAULT_CLUBS)].sort();
+    syncClubsAndRegistrations();
+  const allClubs = [...(appData.clubs || DEFAULT_CLUBS)].sort();
     lotingState.selectedClubs = allClubs.slice(0, slotsMeta.length);
   }
   lotingState.pot = [];
@@ -2414,6 +2452,7 @@ function renderCuploting() {
     initLotingForCat(lotingState.cat);
   }
 
+  syncClubsAndRegistrations();
   const allClubs = [...(appData.clubs || DEFAULT_CLUBS)].sort();
   const selCount = lotingState.selectedClubs.length;
   const isDrawingActive = lotingState.drawn.length > 0 || lotingState.pot.length > 0;
@@ -2573,6 +2612,7 @@ function toggleLotingClub(club) {
 }
 
 function lotingSelectAll(needed) {
+  syncClubsAndRegistrations();
   const allClubs = [...(appData.clubs || DEFAULT_CLUBS)].sort();
   lotingState.selectedClubs = allClubs.slice(0, needed);
   renderCuploting();
@@ -2726,6 +2766,7 @@ async function lotingLoadFromRegistrations() {
 // ======================== TAB: INSCHRIJVINGEN & CONTACTEN ========================
 function renderInschrijvingen() {
   ensureSeasonExtensions(appData, activeSeason);
+  syncClubsAndRegistrations();
   const isAdmin = !!currentUser;
   const regs = appData.registrations || [];
 
@@ -2836,8 +2877,11 @@ async function addRegistrationRow() {
 
 async function removeRegistrationRow(idx) {
   if (!currentUser) return;
-  if (confirm(`"${appData.registrations[idx].club}" verwijderen uit de inschrijflijst?`)) {
+  if (confirm(`"${appData.registrations[idx].club}" verwijderen uit de inschrijflijst en keuzelijsten?`)) {
+    const removedName = appData.registrations[idx].club;
     appData.registrations.splice(idx, 1);
+    appData.clubs = (appData.clubs || []).filter(c => c !== removedName);
+    lotingState.selectedClubs = (lotingState.selectedClubs || []).filter(c => c !== removedName);
     renderInschrijvingen();
     await saveState();
   }
@@ -2952,8 +2996,14 @@ function renderDraaiboekFinales() {
 
 async function updateFinaledagField(field, val) {
   if (!currentUser) return;
-  appData.finaledag[field] = val.trim();
-  renderDraaiboekFinales();
+  const oldVal = appData.finaledag[field];
+  const newVal = val.trim();
+  appData.finaledag[field] = newVal;
+  if (field === "neutralVenue" && oldVal && newVal && oldVal !== newVal) {
+    (appData.reglementSenVet || []).forEach(r => { r.tekst = r.tekst.split(oldVal).join(newVal); });
+    (appData.reglementJunioren || []).forEach(r => { r.tekst = r.tekst.split(oldVal).join(newVal); });
+  }
+  renderCurrentTab();
   await saveState();
 }
 
@@ -3045,6 +3095,7 @@ function renderReglementen() {
         <div class="card-title">📜 KTO Cup Reglementen, Wedstrijddagen &amp; Uitnodiging (${activeSeason})</div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <button class="btn btn-accent btn-sm" onclick="printReglementenPdf('uitnodiging')">🖨️ Uitnodiging PDF</button>
+          <button class="btn btn-sm" onclick="printReglementenPdf('speeldagen')">🖨️ Speeldagen PDF</button>
           <button class="btn btn-sm" onclick="printReglementenPdf('reglementen')">🖨️ Reglementen PDF</button>
         </div>
       </div>
@@ -3247,6 +3298,47 @@ function printReglementenPdf(mode) {
           <strong>Finaledag:</strong> De finales worden gespeeld op <strong>${finDate}</strong> op <strong>${fd.venue}</strong>.
         </p>
         <p>Met sportieve groet,<br><strong>Wedstrijd- en Juniorencommissie KTO</strong></p>
+      </div>
+    `;
+  } else if (mode === "speeldagen") {
+    const wDagen = appData.wedstrijddagen || createDefaultWedstrijddagen();
+    pdfDiv.innerHTML = `
+      <div class="pdf-banner">
+        <div>
+          <h2>📅 VASTE SPEELDAGEN &amp; AANVANGSTIJDEN KTO CUP ${activeSeason}</h2>
+          <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+            Klootschietersbond Twente Oost &bull; Neutrale baan: ${fd.neutralVenue} &bull; Finalebaan: ${fd.venue}
+          </div>
+        </div>
+        <div class="pdf-meta-right">
+          <div>Seizoen ${activeSeason}</div>
+          <div>Finaledag: ${finDate}</div>
+        </div>
+      </div>
+
+      <table class="pdf-ref-table">
+        <thead>
+          <tr>
+            <th>Toernooifase</th>
+            <th>🥇 Veteranen (Woensdag)</th>
+            <th>🏆 Senioren (Donderdag)</th>
+            <th>⚡ Junioren (Maandag)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${wDagen.map(w => `
+            <tr>
+              <td><strong>${w.ronde}</strong></td>
+              <td>${w.veteranen}</td>
+              <td>${w.senioren}</td>
+              <td>${w.junioren}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+
+      <div class="pdf-rules-box">
+        <strong>Opmerking:</strong> ${appData.reglementenNote || ''}
       </div>
     `;
   } else {
