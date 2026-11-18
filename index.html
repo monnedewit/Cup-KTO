@@ -395,63 +395,193 @@ const DEFAULT_CLUBS = [
 ];
 
 // Lege sjabloon-generator voor een nieuw seizoen (bijv. 2026/2027)
+
+function buildSeniorenMatchesForCount(teamCount, existingData) {
+  const count = Math.max(8, Math.min(14, parseInt(teamCount) || 12));
+  const r1Count = count - 8;
+  const oldMatchesMap = {};
+  if (existingData && Array.isArray(existingData.matches)) {
+    existingData.matches.forEach(m => { oldMatchesMap[m.id] = m; });
+  }
+
+  const slots = {};
+  for (let i = 1; i <= count; i++) {
+    slots[i] = (existingData && existingData.slots && existingData.slots[i]) ? existingData.slots[i] : "";
+  }
+
+  const matches = [];
+  const qfEntrants = [];
+
+  for (let i = 1; i <= r1Count; i++) {
+    const sH = (i * 2) - 1;
+    const sA = i * 2;
+    const id = "s_" + i;
+    const old = oldMatchesMap[id] || {};
+    matches.push({
+      id,
+      round: "Ronde 1",
+      code: `${sH} tegen ${sA}`,
+      slotHome: sH,
+      slotAway: sA,
+      sc1H: old.sc1H ?? 0,
+      sc1A: old.sc1A ?? 0,
+      sc2H: old.sc2H ?? 0,
+      sc2A: old.sc2A ?? 0,
+      decWinner: old.decWinner ?? "",
+      ref: old.ref ?? ""
+    });
+    qfEntrants.push({ type: "match", id });
+  }
+
+  for (let s = (r1Count * 2) + 1; s <= count; s++) {
+    qfEntrants.push({ type: "slot", slot: s });
+  }
+
+  for (let q = 1; q <= 4; q++) {
+    const e1 = qfEntrants[(q - 1) * 2];
+    const e2 = qfEntrants[(q - 1) * 2 + 1];
+    const id = "s_qf" + q;
+    const old = oldMatchesMap[id] || {};
+    matches.push({
+      id,
+      round: "Kwartfinale",
+      code: `Kwartfinale ${q}`,
+      fromHome: e1.type === "match" ? e1.id : undefined,
+      slotHome: e1.type === "slot" ? e1.slot : undefined,
+      fromAway: e2.type === "match" ? e2.id : undefined,
+      slotAway: e2.type === "slot" ? e2.slot : undefined,
+      sc1H: old.sc1H ?? 0,
+      sc1A: old.sc1A ?? 0,
+      sc2H: old.sc2H ?? 0,
+      sc2A: old.sc2A ?? 0,
+      decWinner: old.decWinner ?? "",
+      ref: old.ref ?? ""
+    });
+  }
+
+  for (let h = 1; h <= 2; h++) {
+    const id = "s_sf" + h;
+    const old = oldMatchesMap[id] || {};
+    matches.push({
+      id,
+      round: "Halve Finale",
+      code: `Halve finale ${h}`,
+      fromHome: "s_qf" + ((h - 1) * 2 + 1),
+      fromAway: "s_qf" + ((h - 1) * 2 + 2),
+      sc1H: old.sc1H ?? 0,
+      sc1A: old.sc1A ?? 0,
+      sc2H: old.sc2H ?? 0,
+      sc2A: old.sc2A ?? 0,
+      decWinner: old.decWinner ?? "",
+      ref: old.ref ?? ""
+    });
+  }
+
+  const oldFin = oldMatchesMap["s_fin"] || {};
+  matches.push({
+    id: "s_fin",
+    round: "Finale",
+    code: "FINALE",
+    fromHome: "s_sf1",
+    fromAway: "s_sf2",
+    sc1H: oldFin.sc1H ?? 0,
+    sc1A: oldFin.sc1A ?? 0,
+    sc2H: null,
+    sc2A: null,
+    decWinner: oldFin.decWinner ?? "",
+    ref: oldFin.ref ?? ""
+  });
+
+  return { teamCount: count, slots, matches };
+}
+
+
+function buildVeteranenPoulesForCount(teamCount, existingPoules) {
+  const count = Math.max(8, Math.min(14, parseInt(teamCount) || 12));
+  const base = Math.floor(count / 4);
+  const rem = count % 4;
+  const names = ["Poule A", "Poule B", "Poule C", "Poule D"];
+  const oldMap = {};
+  if (Array.isArray(existingPoules)) {
+    existingPoules.forEach(p => { oldMap[p.name] = p; });
+  }
+
+  let slotCounter = 1;
+  const poules = names.map((pName, idx) => {
+    const size = base + (idx < rem ? 1 : 0);
+    const old = oldMap[pName] || {};
+    const slotNrs = [];
+    const teams = [];
+    for (let t = 0; t < size; t++) {
+      slotNrs.push(slotCounter++);
+      teams.push((old.teams && old.teams[t]) ? old.teams[t] : "");
+    }
+    const gameCount = size === 2 ? 2 : (size === 3 ? 3 : 6);
+    const games = [];
+    for (let g = 0; g < gameCount; g++) {
+      const oldG = (old.games && old.games[g]) ? old.games[g] : {};
+      games.push({
+        label: "Wedstrijd " + (g + 1),
+        p1: oldG.p1 ?? 0,
+        p2: oldG.p2 ?? 0,
+        p3: oldG.p3 ?? 0,
+        p4: oldG.p4 ?? 0
+      });
+    }
+    return {
+      name: pName,
+      slotNrs,
+      teams,
+      games,
+      decWinner: old.decWinner ?? "",
+      ref: old.ref ?? ""
+    };
+  });
+
+  return { teamCount: count, poules };
+}
+
 function createEmptySeasonTemplate(seasonLabel) {
   return {
     season: seasonLabel,
     clubs: [...DEFAULT_CLUBS],
-    senioren: {
-      dates: {
-        r1: "15-4 / 22-4 / 29-4",
-        qf: "6-5 / 20-5 / 27-5",
-        sf: "3-6 / 10-6 / 17-6",
-        final: "Zondag 20 juni 2027"
-      },
-      // 12 lotingsvakjes (1 t/m 8 spelen Ronde 1; 9 t/m 12 zijn vrijgeloot voor Kwartfinale)
-      slots: {
-        1: "", 2: "", 3: "", 4: "", 5: "", 6: "", 7: "", 8: "",
-        9: "", 10: "", 11: "", 12: ""
-      },
-      matches: [
-        { id: "s_1", round: "Ronde 1", code: "1 tegen 2", slotHome: 1, slotAway: 2, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "s_2", round: "Ronde 1", code: "3 tegen 4", slotHome: 3, slotAway: 4, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "s_3", round: "Ronde 1", code: "5 tegen 6", slotHome: 5, slotAway: 6, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "s_4", round: "Ronde 1", code: "7 tegen 8", slotHome: 7, slotAway: 8, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-
-        { id: "s_qf1", round: "Kwartfinale", code: "Kwartfinale 1", fromHome: "s_1", fromAway: "s_2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "s_qf2", round: "Kwartfinale", code: "Kwartfinale 2", fromHome: "s_3", fromAway: "s_4", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "s_qf3", round: "Kwartfinale", code: "Kwartfinale 3", slotHome: 9, slotAway: 10, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "s_qf4", round: "Kwartfinale", code: "Kwartfinale 4", slotHome: 11, slotAway: 12, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-
-        { id: "s_sf1", round: "Halve Finale", code: "Halve finale 1", fromHome: "s_qf1", fromAway: "s_qf2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "s_sf2", round: "Halve Finale", code: "Halve finale 2", fromHome: "s_qf3", fromAway: "s_qf4", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-
-        { id: "s_fin", round: "Finale", code: "FINALE", fromHome: "s_sf1", fromAway: "s_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" }
-      ]
-    },
-    veteranen: {
-      title: "Veteranen",
-      dates: {
-        r1: "14-4 / 21-4 / 28-4 / 5-5",
-        qf: "12-5 / 19-5 / 26-5",
-        sf: "2-6 / 9-6 / 16-6",
-        final: "Zondag 20 juni 2027"
-      },
-      poules: [
-        { name: "Poule A", slotNrs: [1, 2, 3], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" },
-        { name: "Poule B", slotNrs: [4, 5, 6], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" },
-        { name: "Poule C", slotNrs: [7, 8, 9], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" },
-        { name: "Poule D", slotNrs: [10, 11], teams: ["", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" }
-      ],
-      knockout: [
-        { id: "v_qf1", round: "Kwartfinale", label: "Kwartfinale 1 (1e Poule A - 2e Poule B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "v_qf2", round: "Kwartfinale", label: "Kwartfinale 2 (1e Poule C - 2e Poule D)", homeRef: "Poule C:1", awayRef: "Poule D:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "v_qf3", round: "Kwartfinale", label: "Kwartfinale 3 (1e Poule B - 2e Poule A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "v_qf4", round: "Kwartfinale", label: "Kwartfinale 4 (1e Poule D - 2e Poule C)", homeRef: "Poule D:1", awayRef: "Poule C:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "v_sf1", round: "Halve Finale", label: "Halve Finale 1", fromHome: "v_qf1", fromAway: "v_qf2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "v_sf2", round: "Halve Finale", label: "Halve Finale 2", fromHome: "v_qf3", fromAway: "v_qf4", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "v_fin", round: "Finale", label: "FINALE", fromHome: "v_sf1", fromAway: "v_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" }
-      ]
-    },
+    senioren: (() => {
+      const built = buildSeniorenMatchesForCount(12, null);
+      return {
+        dates: {
+          r1: "15-4 / 22-4 / 29-4",
+          qf: "6-5 / 20-5 / 27-5",
+          sf: "3-6 / 10-6 / 17-6",
+          final: "Zondag 20 juni 2027"
+        },
+        teamCount: built.teamCount,
+        slots: built.slots,
+        matches: built.matches
+      };
+    })(),
+    veteranen: (() => {
+      const builtVet = buildVeteranenPoulesForCount(12, null);
+      return {
+        title: "Veteranen",
+        teamCount: builtVet.teamCount,
+        dates: {
+          r1: "14-4 / 21-4 / 28-4 / 5-5",
+          qf: "12-5 / 19-5 / 26-5",
+          sf: "2-6 / 9-6 / 16-6",
+          final: "Zondag 20 juni 2027"
+        },
+        poules: builtVet.poules,
+        knockout: [
+          { id: "v_qf1", round: "Kwartfinale", label: "Kwartfinale 1 (1e Poule A - 2e Poule B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+          { id: "v_qf2", round: "Kwartfinale", label: "Kwartfinale 2 (1e Poule C - 2e Poule D)", homeRef: "Poule C:1", awayRef: "Poule D:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+          { id: "v_qf3", round: "Kwartfinale", label: "Kwartfinale 3 (1e Poule B - 2e Poule A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+          { id: "v_qf4", round: "Kwartfinale", label: "Kwartfinale 4 (1e Poule D - 2e Poule C)", homeRef: "Poule D:1", awayRef: "Poule C:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+          { id: "v_sf1", round: "Halve Finale", label: "Halve Finale 1", fromHome: "v_qf1", fromAway: "v_qf2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+          { id: "v_sf2", round: "Halve Finale", label: "Halve Finale 2", fromHome: "v_qf3", fromAway: "v_qf4", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+          { id: "v_fin", round: "Finale", label: "FINALE", fromHome: "v_sf1", fromAway: "v_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" }
+        ]
+      };
+    })(),
     jeugdCup: {
       title: "Jeugd Cup Klasse",
       dates: { r1: "12-4 / 19-4 / 3-5 / 10-5", sf: "17-5 / 31-5 / 7-6", final: "Zondag 20 juni 2027" },
@@ -804,6 +934,7 @@ function evaluatePoule(poule) {
       if (idx === 0) sum += Number(g.p1) || 0;
       if (idx === 1) sum += Number(g.p2) || 0;
       if (idx === 2) sum += Number(g.p3) || 0;
+      if (idx === 3) sum += Number(g.p4) || 0;
     });
     return { team: t, pts: sum };
   }).filter(Boolean);
@@ -841,6 +972,12 @@ function getSeniorenResolved() {
 // ======================== RENDER SENIOREN ========================
 function renderSenioren() {
   const sen = appData.senioren;
+  const count = sen.teamCount || Object.keys(sen.slots || {}).length || 12;
+  const r1Matches = sen.matches.filter(m => m.round === "Ronde 1");
+  const byeStart = (r1Matches.length * 2) + 1;
+  const byeSlots = [];
+  for (let s = byeStart; s <= count; s++) byeSlots.push(s);
+
   const resolved = getSeniorenResolved();
   const isAdmin = !!currentUser;
   const champion = resolved["s_fin"]?.winner || "Nog te bepalen";
@@ -848,10 +985,20 @@ function renderSenioren() {
   let html = `
     <div class="card">
       <div class="card-header">
-        <div class="card-title">🏆 Senioren (${activeSeason}) – Loting &amp; Toernooiboom</div>
+        <div class="card-title">
+          🏆 Senioren (${activeSeason}) – Loting &amp; Toernooiboom
+          ${isAdmin ? `
+            <span style="background:#dcfce7; border:1px solid #86efac; padding:3px 9px; border-radius:6px; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px;">
+              <span>Aantal teams:</span>
+              <select style="font-weight:800; color:var(--primary); border:1px solid #86efac; border-radius:4px; padding:2px 6px;" onchange="changeSeniorenTeamCount(this.value)">
+                ${[8,9,10,11,12,13,14].map(n => `<option value="${n}" ${n === count ? 'selected' : ''}>${n} teams (${n-8} wed R1, ${16-n} vrijgeloot)</option>`).join("")}
+              </select>
+            </span>
+          ` : `<span class="date-chip" style="background:#dcfce7; border-color:#86efac; color:#065f46;">${count} teams (${r1Matches.length} wed R1 &bull; ${byeSlots.length} vrijgeloot)</span>`}
+        </div>
         ${!isAdmin ? `
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            <span class="date-chip">Ronde 1: ${sen.dates.r1}</span>
+            ${r1Matches.length > 0 ? `<span class="date-chip">Ronde 1: ${sen.dates.r1}</span>` : ''}
             <span class="date-chip">Kwartfinale: ${sen.dates.qf}</span>
             <span class="date-chip">Halve Finale: ${sen.dates.sf}</span>
             <span class="date-chip finale">Finale: ${sen.dates.final}</span>
@@ -884,13 +1031,10 @@ function renderSenioren() {
         <div class="bracket">
           <!-- RONDE 1 + VRIJGELOTE TEAMS -->
           <div class="bracket-round">
-            <div class="round-title">Loting &amp; Ronde 1 <span class="round-subdate">${sen.dates.r1}</span></div>
-            ${renderSeniorenBracketMatch(sen.matches[0], resolved["s_1"], "Wed 1 vs 2", isAdmin)}
-            ${renderSeniorenBracketMatch(sen.matches[1], resolved["s_2"], "Wed 3 vs 4", isAdmin)}
-            ${renderSeniorenBracketMatch(sen.matches[2], resolved["s_3"], "Wed 5 vs 6", isAdmin)}
-            ${renderSeniorenBracketMatch(sen.matches[3], resolved["s_4"], "Wed 7 vs 8", isAdmin)}
+            <div class="round-title">Loting &amp; Ronde 1 <span class="round-subdate">${r1Matches.length > 0 ? sen.dates.r1 : 'Alle 8 teams direct in Kwartfinale'}</span></div>
+            ${r1Matches.map(m => renderSeniorenBracketMatch(m, resolved[m.id], `Wed ${m.slotHome} vs ${m.slotAway}`, isAdmin)).join("")}
 
-            ${[9, 10, 11, 12].map(nr => `
+            ${byeSlots.map(nr => `
               <div class="match-box bye-box">
                 <div class="match-meta"><span>Vrijgeloot (start in Kwartfinale)</span></div>
                 <div class="team-line">
@@ -908,23 +1052,28 @@ function renderSenioren() {
           <!-- KWARTFINALE -->
           <div class="bracket-round">
             <div class="round-title">Kwartfinale <span class="round-subdate">${sen.dates.qf}</span></div>
-            ${renderSeniorenBracketMatch(sen.matches[4], resolved["s_qf1"], "Kwartfinale 1", isAdmin)}
-            ${renderSeniorenBracketMatch(sen.matches[5], resolved["s_qf2"], "Kwartfinale 2", isAdmin)}
-            ${renderSeniorenBracketMatch(sen.matches[6], resolved["s_qf3"], "Kwartfinale 3", isAdmin)}
-            ${renderSeniorenBracketMatch(sen.matches[7], resolved["s_qf4"], "Kwartfinale 4", isAdmin)}
+            ${["s_qf1", "s_qf2", "s_qf3", "s_qf4"].map((id, i) => {
+              const m = sen.matches.find(x => x.id === id);
+              return renderSeniorenBracketMatch(m, resolved[id], `Kwartfinale ${i + 1}`, isAdmin);
+            }).join("")}
           </div>
 
           <!-- HALVE FINALE -->
           <div class="bracket-round">
             <div class="round-title">Halve Finale <span class="round-subdate">${sen.dates.sf}</span></div>
-            ${renderSeniorenBracketMatch(sen.matches[8], resolved["s_sf1"], "Halve Finale 1", isAdmin)}
-            ${renderSeniorenBracketMatch(sen.matches[9], resolved["s_sf2"], "Halve Finale 2", isAdmin)}
+            ${["s_sf1", "s_sf2"].map((id, i) => {
+              const m = sen.matches.find(x => x.id === id);
+              return renderSeniorenBracketMatch(m, resolved[id], `Halve Finale ${i + 1}`, isAdmin);
+            }).join("")}
           </div>
 
           <!-- FINALE & KAMPIOEN -->
           <div class="bracket-round">
             <div class="round-title">Finale <span class="round-subdate">${sen.dates.final}</span></div>
-            ${renderSeniorenBracketMatch(sen.matches[10], resolved["s_fin"], "FINALE", isAdmin)}
+            ${(() => {
+              const m = sen.matches.find(x => x.id === "s_fin");
+              return renderSeniorenBracketMatch(m, resolved["s_fin"], "FINALE", isAdmin);
+            })()}
             <div class="champion-card">
               <h4>🏆 Kampioen Senioren</h4>
               <div class="champion-name">${champion}</div>
@@ -1004,6 +1153,16 @@ function renderSenioren() {
   `;
 
   document.getElementById("mainContent").innerHTML = html;
+}
+
+async function changeSeniorenTeamCount(newCount) {
+  if (!currentUser) return;
+  const built = buildSeniorenMatchesForCount(newCount, appData.senioren);
+  appData.senioren.teamCount = built.teamCount;
+  appData.senioren.slots = built.slots;
+  appData.senioren.matches = built.matches;
+  renderSenioren();
+  await saveState();
 }
 
 function renderSeniorenBracketMatch(m, res, badgeText, isAdmin) {
@@ -1119,7 +1278,21 @@ function renderPouleCompetition(compKey) {
   let html = `
     <div class="card">
       <div class="card-header">
-        <div class="card-title">🥇 ${comp.title || 'Veteranen'} (${activeSeason}) – Poulefase &amp; Kruisfinales</div>
+        <div class="card-title">
+          🥇 ${comp.title || 'Veteranen'} (${activeSeason}) – Poulefase &amp; Kruisfinales
+          ${compKey === 'veteranen' ? (isAdmin ? `
+            <span style="background:#dcfce7; border:1px solid #86efac; padding:3px 9px; border-radius:6px; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px;">
+              <span>Aantal teams:</span>
+              <select style="font-weight:800; color:var(--primary); border:1px solid #86efac; border-radius:4px; padding:2px 6px;" onchange="changeVeteranenTeamCount(this.value)">
+                ${[8,9,10,11,12,13,14].map(n => {
+                  const b = Math.floor(n/4), r = n%4;
+                  const dist = [0,1,2,3].map(i => b + (i < r ? 1 : 0)).join('-');
+                  return `<option value="${n}" ${n === (comp.teamCount || 12) ? 'selected' : ''}>${n} teams (poules: ${dist})</option>`;
+                }).join("")}
+              </select>
+            </span>
+          ` : `<span class="date-chip" style="background:#dcfce7; border-color:#86efac; color:#065f46;">${comp.teamCount || 12} teams</span>`) : ''}
+        </div>
         ${!isAdmin ? `
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             ${comp.dates.r1 ? `<span class="date-chip">Poules: ${comp.dates.r1}</span>` : ''}
@@ -1222,6 +1395,7 @@ function renderPouleCompetition(compKey) {
                       ${p.teams[0] ? `<span title="${p.teams[0]}">T1:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p1}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p1', this.value)">` : ''}
                       ${p.teams[1] ? `<span title="${p.teams[1]}">T2:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p2}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p2', this.value)">` : ''}
                       ${p.teams[2] ? `<span title="${p.teams[2]}">T3:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p3}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p3', this.value)">` : ''}
+                      ${p.teams[3] ? `<span title="${p.teams[3]}">T4:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p4 || 0}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p4', this.value)">` : ''}
                     </div>
                   </div>
                 `).join("")}
@@ -1316,6 +1490,16 @@ function renderPouleCompetition(compKey) {
   `;
 
   document.getElementById("mainContent").innerHTML = html;
+}
+
+
+async function changeVeteranenTeamCount(newCount) {
+  if (!currentUser) return;
+  const built = buildVeteranenPoulesForCount(newCount, appData.veteranen.poules);
+  appData.veteranen.teamCount = built.teamCount;
+  appData.veteranen.poules = built.poules;
+  renderCurrentTab();
+  await saveState();
 }
 
 async function updateCompDate(compKey, dateKey, val) {
@@ -1460,21 +1644,23 @@ function generateAndPrintPdf() {
         <!-- KOLOM 1: RONDE 1 -->
         <div>
           <div class="pdf-col-header">Ronde 1 <span>${sen.dates.r1}</span></div>
-          ${[0,1,2,3].map(i => {
-            const m = sen.matches[i];
-            const r = res[m.id];
-            return `
+          ${(() => {
+            const r1M = sen.matches.filter(x => x.round === "Ronde 1");
+            const cnt = sen.teamCount || Object.keys(sen.slots || {}).length || 11;
+            const bStart = (r1M.length * 2) + 1;
+            const bList = [];
+            for (let s = bStart; s <= cnt; s++) bList.push(s);
+            return r1M.map(m => `
               <div class="pdf-slot-card">
                 <div class="pdf-slot-row"><span><span class="pdf-slot-nr">${m.slotHome}.</span> ${sen.slots[m.slotHome] || ''}</span><span>${m.sc1H || m.sc2H ? `${m.sc1H}-${m.sc2H}` : ''}</span></div>
                 <div class="pdf-slot-row"><span><span class="pdf-slot-nr">${m.slotAway}.</span> ${sen.slots[m.slotAway] || ''}</span><span>${m.sc1A || m.sc2A ? `${m.sc1A}-${m.sc2A}` : ''}</span></div>
               </div>
-            `;
-          }).join("")}
-          ${[9,10,11,12].map(nr => `
-            <div class="pdf-slot-card" style="background:#f8fafc;">
-              <div class="pdf-slot-row"><span><span class="pdf-slot-nr">${nr}.</span> ${sen.slots[nr] || '(Vrijgeloot)'}</span><span style="font-size:0.7rem; color:#64748b;">Vrij</span></div>
-            </div>
-          `).join("")}
+            `).join("") + bList.map(nr => `
+              <div class="pdf-slot-card" style="background:#f8fafc;">
+                <div class="pdf-slot-row"><span><span class="pdf-slot-nr">${nr}.</span> ${sen.slots[nr] || '(Vrijgeloot)'}</span><span style="font-size:0.7rem; color:#64748b;">Vrij</span></div>
+              </div>
+            `).join("");
+          })()}
         </div>
 
         <!-- KOLOM 2: KWARTFINALE -->
