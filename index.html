@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KTO Cup 2026 | Live Toernooischema & Uitslagen</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --primary: #0f5132;
+    --primary-light: #198754;
+    --primary-bg: #e8f5e9;
+    --accent: #d97706;
+    --accent-bg: #fef3c7;
+    --danger: #dc2626;
+    --danger-bg: #fee2e2;
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --border: #cbd5e1;
+    --text: #0f172a;
+    --muted: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { background: var(--bg); color: var(--text); font-size: 0.88rem; padding: 14px; }
+
+  .container { max-width: 1400px; margin: 0 auto; }
+
+  header {
+    background: linear-gradient(135deg, #0a3622 0%, var(--primary) 60%, var(--primary-light) 100%);
+    color: white; padding: 16px 22px; border-radius: 10px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    box-shadow: 0 4px 12px rgba(15, 81, 50, 0.2); margin-bottom: 16px;
+  }
+  header h1 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.3px; }
+  header p { font-size: 0.82rem; color: #bbf7d0; margin-top: 2px; }
+
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+  .auth-pill {
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;
+  }
+
+  .btn {
+    padding: 7px 13px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+    border: 1px solid var(--border); background: white; color: var(--text);
+    display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;
+  }
+  .btn:hover { background: #f8fafc; transform: translateY(-1px); }
+  .btn-primary { background: var(--primary-light); color: white; border-color: var(--primary-light); }
+  .btn-primary:hover { background: var(--primary); }
+  .btn-sm { padding: 4px 9px; font-size: 0.76rem; }
+
+  .nav-tabs {
+    display: flex; gap: 6px; background: white; padding: 6px; border-radius: 9px;
+    border: 1px solid var(--border); margin-bottom: 16px; flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .tab-btn {
+    padding: 9px 16px; border-radius: 6px; border: none; background: transparent;
+    font-weight: 700; font-size: 0.86rem; color: #475569; cursor: pointer; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .tab-btn:hover { background: #f1f5f9; color: var(--text); }
+  .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 5px rgba(15,81,50,0.25); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
+    padding: 16px 18px; margin-bottom: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  }
+  .card-header {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 14px;
+  }
+  .card-title { font-size: 1.12rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+
+  .dates-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .date-chip {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;
+    padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;
+  }
+  .date-chip.finale { background: #fef3c7; border-color: #fde68a; color: #92400e; }
+
+  .bracket-wrapper { overflow-x: auto; padding-bottom: 10px; }
+  .bracket { display: flex; gap: 24px; min-width: 920px; align-items: stretch; }
+  .bracket-round { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 12px; }
+  .round-title {
+    text-align: center; font-weight: 800; font-size: 0.85rem; text-transform: uppercase;
+    color: var(--primary); background: var(--primary-bg); padding: 6px; border-radius: 6px;
+    border: 1px solid #bbf7d0; margin-bottom: 6px;
+  }
+  .match-box {
+    background: #f8fafc; border: 1px solid var(--border); border-left: 4px solid var(--primary);
+    border-radius: 6px; padding: 8px 10px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .match-box.needs-decision { border-left-color: var(--danger); background: #fffafa; }
+  .match-box.bye-box { border-left-color: #94a3b8; opacity: 0.85; background: #f1f5f9; }
+  .match-meta { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+  .team-line { display: flex; justify-content: space-between; align-items: center; padding: 3px 5px; border-radius: 4px; font-weight: 600; font-size: 0.83rem; }
+  .team-line.winner { background: #dcfce7; color: #065f46; font-weight: 800; }
+  .team-line.tbd { color: #94a3b8; font-style: italic; font-weight: 500; }
+  .score-pills { display: flex; gap: 3px; }
+  .sc-pill { background: white; border: 1px solid var(--border); padding: 1px 5px; border-radius: 3px; font-size: 0.74rem; font-weight: 800; min-width: 20px; text-align: center; }
+
+  .champion-card {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 2px solid #f59e0b; border-radius: 8px; padding: 14px; text-align: center;
+  }
+  .champion-card h4 { color: #92400e; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .champion-name { font-size: 1.15rem; font-weight: 900; color: #78350f; margin-top: 4px; }
+
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  table.data-table th, table.data-table td { border: 1px solid var(--border); padding: 7px 9px; text-align: left; }
+  table.data-table th { background: #f1f5f9; color: #334155; font-weight: 800; font-size: 0.78rem; }
+  table.data-table tr:nth-child(even) td { background: #fafbfc; }
+  input.sc-input { width: 44px; padding: 3px 4px; text-align: center; font-weight: 800; border: 1px solid var(--border); border-radius: 4px; font-size: 0.82rem; }
+  select.dec-select { padding: 3px 6px; border-radius: 4px; border: 1px solid var(--danger); background: #fff5f5; font-weight: 700; font-size: 0.78rem; color: #991b1b; }
+  .badge-decision { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 800; }
+  .badge-ok { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; }
+
+  .poules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .poule-box { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: #ffffff; }
+  .poule-title { font-weight: 800; color: var(--primary); font-size: 0.95rem; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+  .modal-box { background: white; border-radius: 8px; padding: 20px; width: 92%; max-width: 380px; }
+
+  @media print {
+    .no-print { display: none !important; }
+    body { background: white; padding: 0; }
+    .card { border: none; box-shadow: none; padding: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div>
+      <h1>🏆 KTO Cup 2026 – Live Toernooischema</h1>
+      <p>Klootschietersbond Twente Oost &bull; Finale op zondag 21 juni 2026</p>
+    </div>
+    <div class="header-actions no-print">
+      <span id="saveStatus" style="font-size:0.76rem; color:#bbf7d0; font-weight:700;">Live verbonden</span>
+      <span class="auth-pill" id="authStatusBadge">Alleen-lezen (Bezoeker)</span>
+      <button class="btn btn-sm" id="btnLoginToggle" onclick="handleAuthToggle()">Inloggen Wedstrijdleiding</button>
+      <button class="btn btn-sm" onclick="exportToExcel()">📥 Excel</button>
+      <button class="btn btn-sm" onclick="window.print()">🖨️ Print</button>
+      <button class="btn btn-sm" id="btnResetAdmin" style="display:none; color:#dc2626;" onclick="resetTournamentData()">↺ Reset</button>
+    </div>
+  </header>
+
+  <div class="nav-tabs no-print">
+    <button class="tab-btn active" id="tab-senioren" onclick="switchTab('senioren')">🏆 Senioren</button>
+    <button class="tab-btn" id="tab-veteranen" onclick="switchTab('veteranen')">🥇 Veteranen</button>
+    <button class="tab-btn" id="tab-jeugd-cup" onclick="switchTab('jeugd-cup')">⚡ Jeugd Cup Klasse</button>
+    <button class="tab-btn" id="tab-jeugd-a" onclick="switchTab('jeugd-a')">🎯 Jeugd A Klasse</button>
+    <button class="tab-btn" id="tab-jeugd-b" onclick="switchTab('jeugd-b')">🌱 Jeugd B Klasse</button>
+    <button class="tab-btn" id="tab-scheids" onclick="switchTab('scheids')">📣 Scheidsrechters</button>
+  </div>
+
+  <div id="mainContent"></div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-box">
+    <h3 style="color:var(--primary); margin-bottom:6px;">🔐 Wedstrijdleiding Inloggen</h3>
+    <p style="font-size:0.78rem; color:#64748b; margin-bottom:12px;">Alleen de wedstrijdleiding kan uitslagen invoeren en aanpassen.</p>
+    <div style="margin-bottom:8px;">
+      <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:2px;">E-mailadres:</label>
+      <input type="email" id="loginEmail" style="width:100%; padding:6px; border:1px solid var(--border); border-radius:4px;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:2px;">Wachtwoord:</label>
+      <input type="password" id="loginPassword" style="width:100%; padding:6px; border:1px solid var(--border); border-radius:4px;" onkeydown="if(event.key==='Enter') submitLogin()">
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:6px;">
+      <button class="btn btn-sm" onclick="document.getElementById('loginModal').style.display='none'">Annuleren</button>
+      <button class="btn btn-primary btn-sm" onclick="submitLogin()">Inloggen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://ovqjojgztbbyrkgrfzxc.supabase.co";
+const SUPABASE_KEY = "sb_publishable_RnRgJJAyxebE1nYhDUsIRQ_sG9FgtzT";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const INITIAL_DATA = {
+  senioren: {
+    dates: { r1: "16-4 / 23-4 / 30-4", qf: "7-5 / 21-5 / 28-5", sf: "4-6 / 11-6 / 18-6", final: "Zondag 21 juni 2026" },
+    matches: [
+      { id: "s_1", round: "Ronde 1", code: "1a/1b", home: "Steeds Vooruit", away: "Beuningen", sc1H: 0, sc1A: 1, sc2H: 1, sc2A: 0, decWinner: "", ref: "Noord Berghuizen" },
+      { id: "s_2", round: "Ronde 1", code: "1c/1d", home: "Ons Streven", away: "Mander", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Java & Kolkersveld" },
+      { id: "s_3", round: "Ronde 1", code: "1e/1f", home: "Nooit Gedacht", away: "Vooruitzicht", sc1H: 0, sc1A: 1, sc2H: 1, sc2A: 0, decWinner: "", ref: "Oud Ootmarsum" },
+      { id: "s_4", round: "Ronde 1", code: "1g/1h", home: "De Toekomst", away: "Lemselo", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Vooruit Losser" },
+      { id: "s_qf1", round: "Kwartfinale", code: "2a/2b", fromHome: "s_1", fromAway: "s_2", sc1H: 0, sc1A: 1, sc2H: 0, sc2A: 1, decWinner: "Beuningen", ref: "Nooit Gedacht" },
+      { id: "s_qf2", round: "Kwartfinale", code: "2c/2d", fromHome: "s_3", fromAway: "s_4", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Lemselo" },
+      { id: "s_qf3", round: "Kwartfinale", code: "2e/2f", home: "Noord Berghuizen", away: "Java & Kolkersveld", sc1H: 1, sc1A: 0, sc2H: 1, sc2A: 0, decWinner: "Java & Kolkersveld", ref: "Steeds Vooruit" },
+      { id: "s_qf4", round: "Kwartfinale", code: "2g/2h", home: "Oud Ootmarsum", away: "Vooruit Losser", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "Mander" },
+      { id: "s_sf1", round: "Halve Finale", code: "3a/3b", fromHome: "s_qf1", fromAway: "s_qf2", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "De Toekomst" },
+      { id: "s_sf2", round: "Halve Finale", code: "3c/3d", fromHome: "s_qf3", fromAway: "s_qf4", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "Ons Streven" },
+      { id: "s_fin", round: "Finale", code: "FINALE", fromHome: "s_sf1", fromAway: "s_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "KTO Bestuur" }
+    ]
+  },
+  veteranen: {
+    dates: { r1: "15-4 / 22-4 / 29-4 / 6-5", qf: "13-5 / 20-5 / 27-5", sf: "3-6 / 10-6 / 17-6", final: "Zondag 21 juni 2026" },
+    poules: [
+      { name: "Poule A", ref: "Ons Streven", teams: ["Lemselo", "Oud Ootmarsum", "Lattrop Breklenkamp"], games: [{ label: "Wedstrijd 1", p1: 1, p2: 2, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 2, p3: 1 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 2 }], decWinner: "" },
+      { name: "Poule B", ref: "Nooit Gedacht", teams: ["Ons Streven", "Vooruitzicht", "Steeds Vooruit & Ons Genoegen"], games: [{ label: "Wedstrijd 1", p1: 0, p2: 1, p3: 2 }, { label: "Wedstrijd 2", p1: 0, p2: 2, p3: 1 }, { label: "Wedstrijd 3", p1: 0, p2: 1, p3: 2 }], decWinner: "" },
+      { name: "Poule C", ref: "De Toekomst", teams: ["Nooit Gedacht", "Mander", "Noord Berghuizen"], games: [{ label: "Wedstrijd 1", p1: 0, p2: 2, p3: 1 }, { label: "Wedstrijd 2", p1: 0, p2: 2, p3: 1 }, { label: "Wedstrijd 3", p1: 0, p2: 2, p3: 1 }], decWinner: "" },
+      { name: "Poule D", ref: "Lemselo", teams: ["De Toekomst", "Beuningen"], games: [{ label: "Wedstrijd 1", p1: 2, p2: 1, p3: 0 }, { label: "Wedstrijd 2", p1: 2, p2: 1, p3: 0 }], decWinner: "" }
+    ],
+    knockout: [
+      { id: "v_qf1", round: "Kwartfinale", label: "Kwartfinale 1 (1e A - 2e B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Mander" },
+      { id: "v_qf2", round: "Kwartfinale", label: "Kwartfinale 2 (1e C - 2e D)", homeRef: "Poule C:1", awayRef: "Poule D:2", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Lattrop Breklenkamp" },
+      { id: "v_qf3", round: "Kwartfinale", label: "Kwartfinale 3 (1e B - 2e A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 1, sc2H: 1, sc2A: 0, decWinner: "", ref: "Beuningen" },
+      { id: "v_qf4", round: "Kwartfinale", label: "Kwartfinale 4 (1e D - 2e C)", homeRef: "Poule D:1", awayRef: "Poule C:2", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Steeds Vooruit & Ons Genoegen" },
+      { id: "v_sf1", round: "Halve Finale", label: "Halve Finale 1", fromHome: "v_qf1", fromAway: "v_qf2", sc1H: 0, sc1A: 1, sc2H: 0, sc2A: 0, decWinner: "", ref: "Vooruitzicht" },
+      { id: "v_sf2", round: "Halve Finale", label: "Halve Finale 2", fromHome: "v_qf3", fromAway: "v_qf4", sc1H: 0, sc1A: 1, sc2H: 0, sc2A: 0, decWinner: "", ref: "Noord Berghuizen" },
+      { id: "v_fin", round: "Finale", label: "FINALE", fromHome: "v_sf1", fromAway: "v_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "KTO Bestuur" }
+    ]
+  },
+  jeugdCup: {
+    title: "Jeugd Cup Klasse",
+    dates: { r1: "13-4 / 20-4 / 4-5 / 11-5", sf: "18-5 / 1-6 / 8-6", final: "Zondag 21 juni 2026" },
+    poules: [
+      { name: "Poule A", teams: ["Lattrop Breklenkamp", "Steeds Vooruit", "Nooit Gedacht"], games: [{ label: "Wedstrijd 1", p1: 0, p2: 1, p3: 2 }, { label: "Wedstrijd 2", p1: 0, p2: 1, p3: 2 }, { label: "Wedstrijd 3", p1: 0, p2: 1, p3: 2 }], decWinner: "" },
+      { name: "Poule B", teams: ["Reutum", "Ons Streven", "Beuningen"], games: [{ label: "Wedstrijd 1", p1: 0, p2: 1, p3: 2 }, { label: "Wedstrijd 2", p1: 0, p2: 1, p3: 2 }, { label: "Wedstrijd 3", p1: 0, p2: 1, p3: 2 }], decWinner: "" }
+    ],
+    knockout: [
+      { id: "jc_sf1", round: "Halve Finale", label: "Halve Finale 1 (1e A - 2e B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "" },
+      { id: "jc_sf2", round: "Halve Finale", label: "Halve Finale 2 (1e B - 2e A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "" },
+      { id: "jc_56", round: "5e / 6e Plek", label: "5de en 6de plek (3e A - 3e B)", homeRef: "Poule A:3", awayRef: "Poule B:3", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "" },
+      { id: "jc_fin", round: "Finale", label: "FINALE", fromHome: "jc_sf1", fromAway: "jc_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "" }
+    ]
+  },
+  jeugdA: {
+    title: "Jeugd A Klasse",
+    dates: { r1: "13-4 / 20-4 / 4-5 / 11-5", sf: "18-5 / 1-6 / 8-6", final: "Zondag 21 juni 2026" },
+    poules: [
+      { name: "Poule A", teams: ["Mander", "Beuningen"], games: [{ label: "Wedstrijd 1", p1: 1, p2: 2, p3: 0 }, { label: "Wedstrijd 2", p1: 1, p2: 2, p3: 0 }], decWinner: "" },
+      { name: "Poule B", teams: ["NB & De Toekomst", "Java", "Nooit Gedacht"], games: [{ label: "Wedstrijd 1", p1: 1, p2: 2, p3: 0 }, { label: "Wedstrijd 2", p1: 1, p2: 2, p3: 0 }, { label: "Wedstrijd 3", p1: 1, p2: 2, p3: 0 }], decWinner: "" }
+    ],
+    knockout: [
+      { id: "ja_sf1", round: "Halve Finale", label: "Halve Finale 1 (1e A - 2e B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "" },
+      { id: "ja_sf2", round: "Halve Finale", label: "Halve Finale 2 (1e B - 2e A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "" },
+      { id: "ja_56", round: "5e / 6e Plek", label: "5de en 6de plek (3e A - 3e B)", homeRef: "Poule A:3", awayRef: "Poule B:3", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "" },
+      { id: "ja_fin", round: "Finale", label: "FINALE", fromHome: "ja_sf1", fromAway: "ja_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "" }
+    ]
+  },
+  jeugdB: {
+    title: "Jeugd B Klasse",
+    dates: { r1: "4-5 / 18-5", final: "Zondag 21 juni 2026" },
+    poules: [
+      { name: "Poule A", teams: ["KV Mander", "Java", "Oud Ootmarsum"], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }], decWinner: "" }
+    ],
+    knockout: [
+      { id: "jb_fin", round: "Finale", label: "FINALE (1e Poule A - 2e Poule A)", homeRef: "Poule A:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "" }
+    ]
+  }
+};
+
+let appData = JSON.parse(JSON.stringify(INITIAL_DATA));
+let currentTab = "senioren";
+let currentUser = null;
+
+async function initApp() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  currentUser = session ? session.user : null;
+  updateAuthUI();
+
+  await loadFromSupabase();
+
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    currentUser = session ? session.user : null;
+    updateAuthUI();
+    renderCurrentTab();
+  });
+}
+
+function updateAuthUI() {
+  const badge = document.getElementById("authStatusBadge");
+  const btn = document.getElementById("btnLoginToggle");
+  const resetBtn = document.getElementById("btnResetAdmin");
+
+  if (currentUser) {
+    badge.innerText = "👑 Wedstrijdleiding (" + currentUser.email + ")";
+    badge.style.background = "#fef08a";
+    badge.style.color = "#854d0e";
+    btn.innerText = "Uitloggen";
+    resetBtn.style.display = "inline-flex";
+  } else {
+    badge.innerText = "Alleen-lezen (Bezoeker)";
+    badge.style.background = "rgba(255,255,255,0.16)";
+    badge.style.color = "white";
+    btn.innerText = "Inloggen Wedstrijdleiding";
+    resetBtn.style.display = "none";
+  }
+}
+
+async function handleAuthToggle() {
+  if (currentUser) {
+    await supabaseClient.auth.signOut();
+    currentUser = null;
+    updateAuthUI();
+    renderCurrentTab();
+  } else {
+    document.getElementById("loginModal").style.display = "flex";
+    setTimeout(() => document.getElementById("loginEmail").focus(), 100);
+  }
+}
+
+async function submitLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  if (!email || !password) return alert("Vul e-mailadres en wachtwoord in.");
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) {
+    alert("Inloggen mislukt: " + error.message);
+  } else {
+    document.getElementById("loginModal").style.display = "none";
+    currentUser = data.user;
+    updateAuthUI();
+    renderCurrentTab();
+  }
+}
+
+async function loadFromSupabase() {
+  const st = document.getElementById("saveStatus");
+  try {
+    const { data, error } = await supabaseClient
+      .from("kto_cup_state")
+      .select("data")
+      .eq("id", "cup_2026")
+      .maybeSingle();
+
+    if (data && data.data) {
+      appData = data.data;
+      if (st) st.innerText = "✓ Live data geladen";
+    } else if (currentUser) {
+      // Eerste keer vullen als de tabel nog leeg is
+      await saveState();
+    }
+  } catch (e) {
+    console.error("Fout bij laden:", e);
+  }
+  renderCurrentTab();
+}
+
+async function saveState() {
+  if (!currentUser) return;
+  const st = document.getElementById("saveStatus");
+  if (st) st.innerText = "Opslaan...";
+
+  try {
+    const { error } = await supabaseClient
+      .from("kto_cup_state")
+      .upsert({ id: "cup_2026", data: appData, updated_at: new Date().toISOString() });
+
+    if (error) {
+      alert("Opslaan mislukt: " + error.message);
+    } else if (st) {
+      st.innerText = "✓ Live opgeslagen (" + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ")";
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function resetTournamentData() {
+  if (!currentUser) return;
+  if (confirm("Wil je alle uitslagen terugzetten naar het oorspronkelijke Excel-bestand?")) {
+    appData = JSON.parse(JSON.stringify(INITIAL_DATA));
+    await saveState();
+    renderCurrentTab();
+  }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+  renderCurrentTab();
+}
+
+function evaluateMatch(m, homeName, awayName) {
+  if (!homeName || !awayName || homeName === "Nog onbekend" || awayName === "Nog onbekend" || homeName === "-") {
+    return { home: homeName || "Nog onbekend", away: awayName || "Nog onbekend", winner: null, needsDecision: false, ptsH: 0, ptsA: 0 };
+  }
+
+  let ptsH = 0, ptsA = 0;
+  const s1H = Number(m.sc1H) || 0, s1A = Number(m.sc1A) || 0;
+  if (s1H > s1A) ptsH += 1;
+  else if (s1A > s1H) ptsA += 1;
+
+  if (m.sc2H !== null && m.sc2A !== null) {
+    const s2H = Number(m.sc2H) || 0, s2A = Number(m.sc2A) || 0;
+    if (s2H > s2A) ptsH += 1;
+    else if (s2A > s2H) ptsA += 1;
+  }
+
+  const played = (s1H + s1A > 0) || (m.sc2H !== null && ((Number(m.sc2H) || 0) + (Number(m.sc2A) || 0) > 0));
+  let winner = null, needsDecision = false;
+
+  if (ptsH > ptsA) winner = homeName;
+  else if (ptsA > ptsH) winner = awayName;
+  else if (played && ptsH === ptsA) {
+    needsDecision = true;
+    if (m.decWinner === homeName || m.decWinner === awayName) winner = m.decWinner;
+  }
+
+  return { home: homeName, away: awayName, winner, needsDecision, ptsH, ptsA };
+}
+
+function evaluatePoule(poule) {
+  const totals = poule.teams.map((t, idx) => {
+    let sum = 0;
+    poule.games.forEach(g => {
+      if (idx === 0) sum += Number(g.p1) || 0;
+      if (idx === 1) sum += Number(g.p2) || 0;
+      if (idx === 2) sum += Number(g.p3) || 0;
+    });
+    return { team: t, pts: sum };
+  });
+
+  const sorted = [...totals].sort((a, b) => b.pts - a.pts);
+  const maxPts = sorted.length > 0 ? sorted[0].pts : 0;
+  const topTeams = sorted.filter(x => x.pts === maxPts);
+  const needsDecision = (maxPts > 0 && topTeams.length > 1) || (maxPts === 0 && poule.teams.length > 1);
+
+  let first = sorted[0] ? sorted[0].team : "-";
+  let second = sorted[1] ? sorted[1].team : "-";
+  let third = sorted[2] ? sorted[2].team : "-";
+
+  if (needsDecision && poule.decWinner && poule.teams.includes(poule.decWinner)) {
+    first = poule.decWinner;
+    const rest = sorted.filter(x => x.team !== first);
+    second = rest[0] ? rest[0].team : "-";
+    third = rest[1] ? rest[1].team : "-";
+  }
+
+  return { totals, first, second, third, needsDecision };
+}
+
+function renderSenioren() {
+  const sen = appData.senioren;
+  const resolved = {};
+  const isAdmin = !!currentUser;
+
+  sen.matches.forEach(m => {
+    let hName = m.home, aName = m.away;
+    if (m.fromHome) hName = resolved[m.fromHome]?.winner || "Winnaar " + m.fromHome.toUpperCase();
+    if (m.fromAway) aName = resolved[m.fromAway]?.winner || "Winnaar " + m.fromAway.toUpperCase();
+    resolved[m.id] = evaluateMatch(m, hName, aName);
+  });
+
+  const champion = resolved["s_fin"]?.winner || "Nog te bepalen";
+
+  let html = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🏆 Senioren – Toernooiboom (Knock-out)</div>
+        <div class="dates-strip" style="margin:0;">
+          <span class="date-chip">Ronde 1: ${sen.dates.r1}</span>
+          <span class="date-chip">Kwartfinale: ${sen.dates.qf}</span>
+          <span class="date-chip">Halve Finale: ${sen.dates.sf}</span>
+          <span class="date-chip finale">Finale: ${sen.dates.final}</span>
+        </div>
+      </div>
+
+      <div class="bracket-wrapper">
+        <div class="bracket">
+          <div class="bracket-round">
+            <div class="round-title">Ronde 1</div>
+            ${renderBracketMatch(sen.matches[0], resolved["s_1"], "1 & 2")}
+            ${renderBracketMatch(sen.matches[1], resolved["s_2"], "3 & 4")}
+            ${renderBracketMatch(sen.matches[2], resolved["s_3"], "5 & 6")}
+            ${renderBracketMatch(sen.matches[3], resolved["s_4"], "7 & 8")}
+            <div class="match-box bye-box"><div class="match-meta"><span>Vrijgeloot</span></div><div class="team-line">9. Noord Berghuizen</div></div>
+            <div class="match-box bye-box"><div class="match-meta"><span>Vrijgeloot</span></div><div class="team-line">10. Java & Kolkersveld</div></div>
+            <div class="match-box bye-box"><div class="match-meta"><span>Vrijgeloot</span></div><div class="team-line">11. Oud Ootmarsum</div></div>
+            <div class="match-box bye-box"><div class="match-meta"><span>Vrijgeloot</span></div><div class="team-line">12. Vooruit Losser</div></div>
+          </div>
+          <div class="bracket-round">
+            <div class="round-title">Kwartfinale</div>
+            ${renderBracketMatch(sen.matches[4], resolved["s_qf1"], "KF 1")}
+            ${renderBracketMatch(sen.matches[5], resolved["s_qf2"], "KF 2")}
+            ${renderBracketMatch(sen.matches[6], resolved["s_qf3"], "KF 3")}
+            ${renderBracketMatch(sen.matches[7], resolved["s_qf4"], "KF 4")}
+          </div>
+          <div class="bracket-round">
+            <div class="round-title">Halve Finale</div>
+            ${renderBracketMatch(sen.matches[8], resolved["s_sf1"], "HF 1")}
+            ${renderBracketMatch(sen.matches[9], resolved["s_sf2"], "HF 2")}
+          </div>
+          <div class="bracket-round">
+            <div class="round-title">Finale (21-06-2026)</div>
+            ${renderBracketMatch(sen.matches[10], resolved["s_fin"], "FINALE")}
+            <div class="champion-card">
+              <h4>🏆 Kampioen Senioren</h4>
+              <div class="champion-name">${champion}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:0.75rem; color:#64748b; margin-top:8px;">ℹ️ Bovenste team speelt de 1e wedstrijd thuis.</p>
+    </div>
+
+    ${isAdmin ? `
+    <div class="card no-print">
+      <div class="card-header">
+        <div class="card-title">✏️ Uitslagen & Beslissingen Invoeren – Senioren</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ronde</th>
+              <th>Code</th>
+              <th>Thuis Team (1e wed)</th>
+              <th>Uit Team</th>
+              <th>Wed 1 (Th - Uit)</th>
+              <th>Wed 2 (Th - Uit)</th>
+              <th>Status / Beslissing</th>
+              <th>Winnaar</th>
+              <th>Scheidsrechter</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sen.matches.map((m, idx) => {
+              const res = resolved[m.id];
+              const isFinal = m.sc2H === null;
+              return `
+                <tr>
+                  <td><strong>${m.round}</strong></td>
+                  <td>${m.code}</td>
+                  <td>${res.home}</td>
+                  <td>${res.away}</td>
+                  <td>
+                    <input type="number" min="0" max="9" class="sc-input" value="${m.sc1H}" onchange="updateSenScore(${idx}, 'sc1H', this.value)"> -
+                    <input type="number" min="0" max="9" class="sc-input" value="${m.sc1A}" onchange="updateSenScore(${idx}, 'sc1A', this.value)">
+                  </td>
+                  <td>
+                    ${isFinal ? '<span style="color:#94a3b8; font-size:0.75rem;">Enkele finale</span>' : `
+                      <input type="number" min="0" max="9" class="sc-input" value="${m.sc2H}" onchange="updateSenScore(${idx}, 'sc2H', this.value)"> -
+                      <input type="number" min="0" max="9" class="sc-input" value="${m.sc2A}" onchange="updateSenScore(${idx}, 'sc2A', this.value)">
+                    `}
+                  </td>
+                  <td>
+                    ${res.needsDecision ? `
+                      <div style="display:flex; flex-direction:column; gap:3px;">
+                        <span class="badge-decision">⚠️ Beslissing</span>
+                        <select class="dec-select" onchange="updateSenScore(${idx}, 'decWinner', this.value)">
+                          <option value="">-- Kies winnaar --</option>
+                          <option value="${res.home}" ${m.decWinner === res.home ? 'selected' : ''}>${res.home}</option>
+                          <option value="${res.away}" ${m.decWinner === res.away ? 'selected' : ''}>${res.away}</option>
+                        </select>
+                      </div>
+                    ` : (res.winner ? '<span class="badge-ok">✓ Beslist</span>' : '<span style="color:#94a3b8;">Nog spelen</span>')}
+                  </td>
+                  <td><strong style="color:var(--primary);">${res.winner || '-'}</strong></td>
+                  <td>${m.ref}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    ` : ''}
+  `;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+async function updateSenScore(idx, field, val) {
+  if (!currentUser) return;
+  if (field === 'decWinner') appData.senioren.matches[idx].decWinner = val;
+  else appData.senioren.matches[idx][field] = parseInt(val) || 0;
+  renderSenioren();
+  await saveState();
+}
+
+function renderBracketMatch(m, res, badgeText) {
+  const hWin = res.winner && res.winner === res.home;
+  const aWin = res.winner && res.winner === res.away;
+  const hTbd = res.home.startsWith("Winnaar") || res.home.startsWith("Nog");
+  const aTbd = res.away.startsWith("Winnaar") || res.away.startsWith("Nog");
+
+  return `
+    <div class="match-box ${res.needsDecision && !res.winner ? 'needs-decision' : ''}">
+      <div class="match-meta">
+        <span>${badgeText}</span>
+        <span>📣 ${m.ref || ''}</span>
+      </div>
+      <div class="team-line ${hWin ? 'winner' : ''} ${hTbd ? 'tbd' : ''}">
+        <span>${res.home}</span>
+        <div class="score-pills">
+          <span class="sc-pill">${m.sc1H ?? 0}</span>
+          ${m.sc2H !== null ? `<span class="sc-pill">${m.sc2H ?? 0}</span>` : ''}
+        </div>
+      </div>
+      <div class="team-line ${aWin ? 'winner' : ''} ${aTbd ? 'tbd' : ''}" style="margin-top:3px;">
+        <span>${res.away}</span>
+        <div class="score-pills">
+          <span class="sc-pill">${m.sc1A ?? 0}</span>
+          ${m.sc2A !== null ? `<span class="sc-pill">${m.sc2A ?? 0}</span>` : ''}
+        </div>
+      </div>
+      ${res.needsDecision ? `<div style="font-size:0.7rem; color:#dc2626; font-weight:800; margin-top:3px;">⚡ Beslissing: ${res.winner || 'Nog invullen'}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderPouleCompetition(compKey) {
+  const comp = appData[compKey];
+  const pouleResults = {};
+  const isAdmin = !!currentUser;
+
+  comp.poules.forEach(p => {
+    pouleResults[p.name] = evaluatePoule(p);
+  });
+
+  function resolveTeamRef(refStr) {
+    if (!refStr) return "-";
+    const [pName, pos] = refStr.split(":");
+    const pr = pouleResults[pName];
+    if (!pr) return refStr;
+    if (pos === "1") return pr.first;
+    if (pos === "2") return pr.second;
+    if (pos === "3") return pr.third;
+    return "-";
+  }
+
+  const resolvedKO = {};
+  comp.knockout.forEach(m => {
+    let hName = m.homeRef ? resolveTeamRef(m.homeRef) : (resolvedKO[m.fromHome]?.winner || "Winnaar");
+    let aName = m.awayRef ? resolveTeamRef(m.awayRef) : (resolvedKO[m.fromAway]?.winner || "Winnaar");
+    resolvedKO[m.id] = evaluateMatch(m, hName, aName);
+  });
+
+  const finMatch = comp.knockout[comp.knockout.length - 1];
+  const champion = resolvedKO[finMatch.id]?.winner || "Nog te bepalen";
+
+  let html = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🥇 ${comp.title || 'Veteranen'} – Poulefase & Kruisfinales</div>
+        <div class="dates-strip" style="margin:0;">
+          ${comp.dates.r1 ? `<span class="date-chip">Poules: ${comp.dates.r1}</span>` : ''}
+          ${comp.dates.qf ? `<span class="date-chip">Kwartfinale: ${comp.dates.qf}</span>` : ''}
+          ${comp.dates.sf ? `<span class="date-chip">Halve Finale: ${comp.dates.sf}</span>` : ''}
+          <span class="date-chip finale">Finale: ${comp.dates.final}</span>
+        </div>
+      </div>
+
+      <div class="poules-grid">
+        ${comp.poules.map((p, pIdx) => {
+          const pr = pouleResults[p.name];
+          return `
+            <div class="poule-box">
+              <div class="poule-title">
+                <span>${p.name}</span>
+                ${p.ref ? `<span style="font-size:0.74rem; color:#64748b;">📣 Scheids: ${p.ref}</span>` : ''}
+              </div>
+              <table class="data-table" style="margin-bottom:8px;">
+                <thead>
+                  <tr>
+                    <th>Team</th>
+                    <th style="width:65px; text-align:center;">Punten</th>
+                    <th style="width:95px;">Stand</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${pr.totals.map(tObj => {
+                    let rankBadge = "";
+                    if (tObj.team === pr.first) rankBadge = '<span class="badge-ok">1e (Door)</span>';
+                    else if (tObj.team === pr.second) rankBadge = '<span class="badge-ok" style="background:#e0f2fe; color:#0369a1;">2e (Door)</span>';
+                    else rankBadge = '<span style="color:#94a3b8; font-size:0.74rem;">3e plek</span>';
+
+                    return `
+                      <tr>
+                        <td><strong>${tObj.team}</strong></td>
+                        <td style="text-align:center; font-weight:900; font-size:0.9rem;">${tObj.pts}</td>
+                        <td>${rankBadge}</td>
+                      </tr>
+                    `;
+                  }).join("")}
+                </tbody>
+              </table>
+
+              ${isAdmin ? `
+              <div class="no-print" style="background:#f8fafc; padding:6px 8px; border-radius:5px; border:1px solid #e2e8f0;">
+                <div style="font-size:0.72rem; font-weight:800; color:#475569; margin-bottom:4px;">Punten per wedstrijddag invullen:</div>
+                ${p.games.map((g, gIdx) => `
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:3px; font-size:0.75rem;">
+                    <span style="min-width:75px; font-weight:600;">${g.label}:</span>
+                    <div style="display:flex; gap:4px; align-items:center;">
+                      <span title="${p.teams[0]}">T1:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p1}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p1', this.value)">
+                      <span title="${p.teams[1]}">T2:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p2}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p2', this.value)">
+                      ${p.teams[2] ? `<span title="${p.teams[2]}">T3:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p3}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p3', this.value)">` : ''}
+                    </div>
+                  </div>
+                `).join("")}
+
+                ${pr.needsDecision ? `
+                  <div style="margin-top:5px; padding-top:5px; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center;">
+                    <span class="badge-decision">Beslissing Poulewinnaar:</span>
+                    <select class="dec-select" onchange="updatePouleDec('${compKey}', ${pIdx}, this.value)">
+                      <option value="">-- Kies 1e plek --</option>
+                      ${p.teams.map(t => `<option value="${t}" ${p.decWinner === t ? 'selected' : ''}>${t}</option>`).join("")}
+                    </select>
+                  </div>
+                ` : ''}
+              </div>
+              ` : ''}
+            </div>
+          `;
+        }).join("")}
+      </div>
+
+      <div class="card-header" style="margin-top:10px;">
+        <div class="card-title">⚔️ Vervolgrondes & Finale</div>
+        <div class="champion-card" style="padding:6px 16px; display:flex; align-items:center; gap:10px;">
+          <h4>🏆 Kampioen:</h4>
+          <div class="champion-name" style="margin:0;">${champion}</div>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Wedstrijd</th>
+              <th>Thuis Team</th>
+              <th>Uit Team</th>
+              <th>Wed 1 (Th - Uit)</th>
+              <th>Wed 2 (Th - Uit)</th>
+              <th>Status</th>
+              <th>Winnaar</th>
+              <th>Scheidsrechter</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${comp.knockout.map((m, kIdx) => {
+              const res = resolvedKO[m.id];
+              const isSingle = m.sc2H === null;
+              return `
+                <tr>
+                  <td><strong>${m.label}</strong></td>
+                  <td>${res.home}</td>
+                  <td>${res.away}</td>
+                  <td>
+                    ${isAdmin ? `
+                      <input type="number" min="0" max="9" class="sc-input" value="${m.sc1H}" onchange="updateKOScore('${compKey}', ${kIdx}, 'sc1H', this.value)"> -
+                      <input type="number" min="0" max="9" class="sc-input" value="${m.sc1A}" onchange="updateKOScore('${compKey}', ${kIdx}, 'sc1A', this.value)">
+                    ` : `<strong>${m.sc1H} - ${m.sc1A}</strong>`}
+                  </td>
+                  <td>
+                    ${isSingle ? '<span style="color:#94a3b8; font-size:0.75rem;">Enkele wedstrijd</span>' : (
+                      isAdmin ? `
+                        <input type="number" min="0" max="9" class="sc-input" value="${m.sc2H}" onchange="updateKOScore('${compKey}', ${kIdx}, 'sc2H', this.value)"> -
+                        <input type="number" min="0" max="9" class="sc-input" value="${m.sc2A}" onchange="updateKOScore('${compKey}', ${kIdx}, 'sc2A', this.value)">
+                      ` : `<strong>${m.sc2H} - ${m.sc2A}</strong>`
+                    )}
+                  </td>
+                  <td>
+                    ${res.needsDecision ? (
+                      isAdmin ? `
+                        <select class="dec-select" onchange="updateKOScore('${compKey}', ${kIdx}, 'decWinner', this.value)">
+                          <option value="">-- Beslissing winnaar --</option>
+                          <option value="${res.home}" ${m.decWinner === res.home ? 'selected' : ''}>${res.home}</option>
+                          <option value="${res.away}" ${m.decWinner === res.away ? 'selected' : ''}>${res.away}</option>
+                        </select>
+                      ` : `<span class="badge-decision">Beslissing</span>`
+                    ) : (res.winner ? '<span class="badge-ok">✓ Beslist</span>' : '<span style="color:#94a3b8;">Nog spelen</span>')}
+                  </td>
+                  <td><strong style="color:var(--primary);">${res.winner || '-'}</strong></td>
+                  <td>${m.ref || '-'}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+async function updatePoulePts(compKey, pIdx, gIdx, field, val) {
+  if (!currentUser) return;
+  appData[compKey].poules[pIdx].games[gIdx][field] = parseInt(val) || 0;
+  renderCurrentTab();
+  await saveState();
+}
+
+async function updatePouleDec(compKey, pIdx, val) {
+  if (!currentUser) return;
+  appData[compKey].poules[pIdx].decWinner = val;
+  renderCurrentTab();
+  await saveState();
+}
+
+async function updateKOScore(compKey, kIdx, field, val) {
+  if (!currentUser) return;
+  if (field === 'decWinner') appData[compKey].knockout[kIdx].decWinner = val;
+  else appData[compKey].knockout[kIdx][field] = parseInt(val) || 0;
+  renderCurrentTab();
+  await saveState();
+}
+
+function renderScheidsrechters() {
+  const byRef = {};
+  function addRefTask(ref, cat, matchName) {
+    if (!ref || ref === "-") return;
+    if (!byRef[ref]) byRef[ref] = [];
+    byRef[ref].push({ cat, matchName });
+  }
+
+  appData.senioren.matches.forEach(m => addRefTask(m.ref, "Senioren", `${m.round} (${m.code})`));
+  appData.veteranen.poules.forEach(p => addRefTask(p.ref, "Veteranen", `Poulefase ${p.name}`));
+  appData.veteranen.knockout.forEach(m => addRefTask(m.ref, "Veteranen", m.label));
+
+  let html = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📣 Scheidsrechters-indeling per Vereniging</div>
+      </div>
+      <div class="poules-grid">
+        ${Object.keys(byRef).sort().map(refName => `
+          <div class="poule-box" style="border-left: 4px solid var(--accent);">
+            <div class="poule-title" style="color:#92400e;">
+              <span>📣 ${refName}</span>
+              <span class="badge-ok" style="background:#fef3c7; color:#92400e;">${byRef[refName].length} aanstelling(en)</span>
+            </div>
+            <ul style="padding-left:18px; font-size:0.8rem; color:#334155;">
+              ${byRef[refName].map(t => `<li style="margin-bottom:4px;"><strong>${t.cat}:</strong> ${t.matchName}</li>`).join("")}
+            </ul>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+function renderCurrentTab() {
+  if (currentTab === "senioren") renderSenioren();
+  else if (currentTab === "veteranen") renderPouleCompetition("veteranen");
+  else if (currentTab === "jeugd-cup") renderPouleCompetition("jeugdCup");
+  else if (currentTab === "jeugd-a") renderPouleCompetition("jeugdA");
+  else if (currentTab === "jeugd-b") renderPouleCompetition("jeugdB");
+  else if (currentTab === "scheids") renderScheidsrechters();
+}
+
+function exportToExcel() {
+  if (typeof XLSX === "undefined") return alert("Excel module laadt nog...");
+  const wb = XLSX.utils.book_new();
+  const senRows = [["Ronde", "Code", "Thuis", "Uit", "Sc1 Th", "Sc1 Uit", "Sc2 Th", "Sc2 Uit", "Beslissing", "Scheidsrechter"]];
+  appData.senioren.matches.forEach(m => {
+    senRows.push([m.round, m.code, m.home || m.fromHome, m.away || m.fromAway, m.sc1H, m.sc1A, m.sc2H ?? "-", m.sc2A ?? "-", m.decWinner, m.ref]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(senRows), "Senioren");
+  XLSX.writeFile(wb, "KTO_Cup_2026_Live_Standen.xlsx");
+}
+
+initApp();
+</script>
+</body>
+</html>
