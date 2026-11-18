@@ -896,6 +896,31 @@ function getDutchHolidaysForYear(yr) {
   return map;
 }
 
+
+function createDefaultRoulatieschema() {
+  return [
+    { club: "Beuningen", lvc: "", ktoCompCup: "2024", ktoFinales: "2025" },
+    { club: "De Lemselo Simbroekbaan", lvc: "2031", ktoCompCup: "2027", ktoFinales: "2018" },
+    { club: "De Toekomst", lvc: "2018", ktoCompCup: "2019", ktoFinales: "2027" },
+    { club: "Dorp Boer", lvc: "2032", ktoCompCup: "2028", ktoFinales: "2026" },
+    { club: "Java", lvc: "2022", ktoCompCup: "2029", ktoFinales: "" },
+    { club: "Kolkersveld oud of nieuw", lvc: "2024 nw", ktoCompCup: "2025 oud", ktoFinales: "2024 oud" },
+    { club: "Nooit Gedacht", lvc: "2026", ktoCompCup: "2018", ktoFinales: "2028" },
+    { club: "Nrd. Berghuizen", lvc: "", ktoCompCup: "2022", ktoFinales: "" },
+    { club: "Ons Streven", lvc: "2028", ktoCompCup: "2026", ktoFinales: "2022" },
+    { club: "Rossum", lvc: "2030", ktoCompCup: "2023", ktoFinales: "2019" },
+    { club: "Ons Genoegen", lvc: "", ktoCompCup: "2030", ktoFinales: "" },
+    { club: "Vooruit Losser", lvc: "", ktoCompCup: "2031", ktoFinales: "" },
+    { club: "Vooruitzicht", lvc: "", ktoCompCup: "2032", ktoFinales: "" },
+    { club: "Steeds Vooruit", lvc: "2033", ktoCompCup: "2033", ktoFinales: "2023" },
+    { club: "De Gunne", lvc: "2019", ktoCompCup: "-", ktoFinales: "" },
+    { club: "Hertme", lvc: "2023", ktoCompCup: "-", ktoFinales: "" },
+    { club: "Lattrop-Breklenkamp", lvc: "2025", ktoCompCup: "-", ktoFinales: "" },
+    { club: "Oud Ootmarsum", lvc: "2027", ktoCompCup: "-", ktoFinales: "" },
+    { club: "Wilskracht", lvc: "2029", ktoCompCup: "-", ktoFinales: "" }
+  ];
+}
+
 function createDefaultZomerprogramma(seasonLabel) {
   const yearMatch = (seasonLabel || "2026/2027").match(/20\d{2}/g);
   const yr = yearMatch ? parseInt(yearMatch[yearMatch.length - 1]) : 2027;
@@ -1173,6 +1198,9 @@ function ensureSeasonExtensions(dataObj, seasonLabel) {
   if (!Array.isArray(dataObj.wedstrijddagen)) {
     dataObj.wedstrijddagen = createDefaultWedstrijddagen();
   }
+  if (!Array.isArray(dataObj.roulatieschema)) {
+    dataObj.roulatieschema = createDefaultRoulatieschema();
+  }
   if (!Array.isArray(dataObj.zomerprogramma)) {
     dataObj.zomerprogramma = createDefaultZomerprogramma(seasonLabel);
   } else {
@@ -1301,6 +1329,7 @@ function createEmptySeasonTemplate(seasonLabel) {
     })),
     finaledag: createDefaultFinaledag(seasonLabel),
     wedstrijddagen: createDefaultWedstrijddagen(),
+    roulatieschema: createDefaultRoulatieschema(),
     zomerprogramma: createDefaultZomerprogramma(seasonLabel),
     inviteMeta: {
       deadline: "9 maart",
@@ -3417,6 +3446,7 @@ function renderReglementen() {
           <button class="btn btn-accent btn-sm" onclick="printReglementenPdf('uitnodiging')">🖨️ Uitnodiging PDF</button>
           <button class="btn btn-sm" onclick="printReglementenPdf('speeldagen')">🖨️ Speeldagen PDF</button>
           <button class="btn btn-sm" onclick="printReglementenPdf('weekkalender')">🖨️ Weekkalender PDF</button>
+          <button class="btn btn-sm" onclick="printReglementenPdf('roulatie')">🖨️ Roulatieschema PDF</button>
           <button class="btn btn-sm" onclick="printReglementenPdf('reglementen')">🖨️ Reglementen PDF</button>
         </div>
       </div>
@@ -3523,6 +3553,50 @@ function renderReglementen() {
                 ${isAdmin ? `<td style="text-align:center;"><button class="btn btn-sm" style="color:#dc2626; padding:1px 5px;" onclick="removeZomerWeekRow(${idx})">&times;</button></td>` : ''}
               </tr>
             `).join("")}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- BLOK 1C: ROULATIESCHEMA BESLISSINGSWEDSTRIJDEN -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px; margin-top:6px;">
+        <h3 style="color:var(--primary); font-size:0.98rem; margin:0;">🔄 Roulatieschema Beslissingswedstrijden &amp; Cup-Finales</h3>
+        ${isAdmin ? `
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="applyRoulatieForActiveSeason()">✨ Neem banen voor ${activeSeason} over</button>
+            <button class="btn btn-sm" onclick="addRoulatieRow()">+ Vereniging toevoegen</button>
+          </div>
+        ` : ''}
+      </div>
+      <div style="overflow-x:auto; margin-bottom:18px;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Vereniging / Baan</th>
+              <th style="text-align:center; width:150px;">LVC<br>SEN &amp; JUN</th>
+              <th style="text-align:center; width:150px;">KTO<br>comp &amp; cup</th>
+              <th style="text-align:center; width:150px;">KTO<br>Cup-Finales</th>
+              ${isAdmin ? '<th style="width:36px;"></th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+            ${(() => {
+              const yearMatch = (activeSeason || "2026/2027").match(/20\d{2}/g);
+              const yrStr = yearMatch ? String(yearMatch[yearMatch.length - 1]) : "2027";
+              return (appData.roulatieschema || []).map((r, idx) => {
+                const isCompMatch = r.ktoCompCup && r.ktoCompCup.includes(yrStr);
+                const isFinMatch = r.ktoFinales && r.ktoFinales.includes(yrStr);
+                const rowBg = (isCompMatch || isFinMatch) ? "#fefce8" : "";
+                return `
+                  <tr style="background:${rowBg};">
+                    <td><strong>${isAdmin ? `<input type="text" value="${r.club}" style="width:100%; padding:2px 5px; border:1px solid #cbd5e1; border-radius:4px; font-weight:700;" onchange="updateRoulatieRow(${idx}, 'club', this.value)">` : r.club}</strong></td>
+                    <td style="text-align:center;">${isAdmin ? `<input type="text" value="${r.lvc || ''}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateRoulatieRow(${idx}, 'lvc', this.value)">` : (r.lvc || '')}</td>
+                    <td style="text-align:center; background:${isCompMatch ? '#dcfce7' : ''};">${isAdmin ? `<input type="text" value="${r.ktoCompCup || ''}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center; font-weight:${isCompMatch ? '800' : '500'};" onchange="updateRoulatieRow(${idx}, 'ktoCompCup', this.value)">` : `<strong>${r.ktoCompCup || ''}</strong>`}</td>
+                    <td style="text-align:center; background:${isFinMatch ? '#fef08a' : ''};">${isAdmin ? `<input type="text" value="${r.ktoFinales || ''}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center; font-weight:${isFinMatch ? '800' : '500'};" onchange="updateRoulatieRow(${idx}, 'ktoFinales', this.value)">` : `<strong>${r.ktoFinales || ''}</strong>`}</td>
+                    ${isAdmin ? `<td style="text-align:center;"><button class="btn btn-sm" style="color:#dc2626; padding:1px 5px;" onclick="removeRoulatieRow(${idx})">&times;</button></td>` : ''}
+                  </tr>
+                `;
+              }).join("");
+            })()}
           </tbody>
         </table>
       </div>
@@ -3658,6 +3732,52 @@ async function resetZomerprogrammaForSeason() {
     appData.zomerprogramma = createDefaultZomerprogramma(activeSeason);
     renderReglementen();
     await saveState();
+  }
+}
+
+
+async function updateRoulatieRow(idx, field, val) {
+  if (!currentUser) return;
+  appData.roulatieschema[idx][field] = val.trim();
+  await saveState();
+}
+
+async function addRoulatieRow() {
+  if (!currentUser) return;
+  appData.roulatieschema.push({ club: "Nieuwe vereniging", lvc: "", ktoCompCup: "", ktoFinales: "" });
+  renderReglementen();
+  await saveState();
+}
+
+async function removeRoulatieRow(idx) {
+  if (!currentUser) return;
+  appData.roulatieschema.splice(idx, 1);
+  renderReglementen();
+  await saveState();
+}
+
+async function applyRoulatieForActiveSeason() {
+  if (!currentUser) return;
+  const yearMatch = (activeSeason || "2026/2027").match(/20\d{2}/g);
+  const yrStr = yearMatch ? String(yearMatch[yearMatch.length - 1]) : "2027";
+  const list = appData.roulatieschema || [];
+  const compRow = list.find(r => r.ktoCompCup && r.ktoCompCup.includes(yrStr));
+  const finRow = list.find(r => r.ktoFinales && r.ktoFinales.includes(yrStr));
+
+  if (!compRow && !finRow) {
+    return alert(`Geen vermelding gevonden voor jaar ${yrStr} in het roulatieschema.`);
+  }
+  const msg = `Gevonden voor ${yrStr}:\n` +
+    `• Neutrale baan (KTO comp & cup): ${compRow ? compRow.club : '(geen)'}\n` +
+    `• Finalebaan (KTO Cup-Finales): ${finRow ? finRow.club : '(geen)'}\n\nWil je deze overnemen in het schema?`;
+  if (confirm(msg)) {
+    if (compRow) {
+      await updateFinaledagField("neutralVenue", compRow.club);
+    }
+    if (finRow) {
+      await updateFinaledagField("venue", finRow.club);
+    }
+    renderReglementen();
   }
 }
 
@@ -3882,6 +4002,43 @@ function printReglementenPdf(mode) {
         <span><strong>Aanvangstijden:</strong> Junioren maandag 19:00 uur &bull; Vóór 1 mei: Vet &amp; Sen 19:00 uur &bull; Na 1 mei: Veteranen 19:15 uur en Senioren 19:30 uur.</span>
         <span><strong>Neutrale baan:</strong> ${fd.neutralVenue} &bull; <strong>Finalebaan:</strong> ${fd.venue}</span>
       </div>
+    `;
+  } else if (mode === "roulatie") {
+    const rList = appData.roulatieschema || [];
+    pdfDiv.innerHTML = `
+      <div class="pdf-banner">
+        <div>
+          <h2>🔄 ROULATIESCHEMA BESLISSINGSWEDSTRIJDEN &amp; CUP-FINALES</h2>
+          <div style="font-size:0.78rem; color:#475569; font-weight:700; margin-top:2px;">
+            Klootschietersbond Twente Oost (KTO) &bull; Overzicht per vereniging / baan
+          </div>
+        </div>
+        <div class="pdf-meta-right">
+          <div>Actief seizoen: ${activeSeason}</div>
+          <div>Finaledag: ${finDate} (${fd.venue})</div>
+        </div>
+      </div>
+
+      <table class="pdf-ref-table">
+        <thead>
+          <tr>
+            <th>Vereniging</th>
+            <th style="text-align:center; width:160px;">LVC SEN &amp; JUN</th>
+            <th style="text-align:center; width:160px;">KTO comp &amp; cup</th>
+            <th style="text-align:center; width:160px;">KTO Cup-Finales</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rList.map(r => `
+            <tr>
+              <td><strong>${r.club}</strong></td>
+              <td style="text-align:center;">${r.lvc || ''}</td>
+              <td style="text-align:center;">${r.ktoCompCup || ''}</td>
+              <td style="text-align:center;">${r.ktoFinales || ''}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
     `;
   } else {
     const senVetRules = appData.reglementSenVet || [];
