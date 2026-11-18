@@ -2384,6 +2384,7 @@ function generateAndPrintPdf() {
 // ======================== DIGITALE CUPLOTING MACHINE ========================
 let lotingState = {
   cat: "senioren",
+  initialized: false,
   selectedClubs: [],
   pot: [],
   drawn: [], // array of { slotNr, label, club }
@@ -2423,6 +2424,7 @@ function getLotingSlotsMeta(cat) {
 
 function initLotingForCat(cat) {
   lotingState.cat = cat;
+  lotingState.initialized = true;
   const slotsMeta = getLotingSlotsMeta(cat);
   const fieldMap = { senioren: "sen", veteranen: "vet", jeugdCup: "jCup", jeugdA: "jA", jeugdB: "jB" };
   const f = fieldMap[cat];
@@ -2448,7 +2450,7 @@ function renderCuploting() {
   }
   const slotsMeta = getLotingSlotsMeta(lotingState.cat);
   const needed = slotsMeta.length;
-  if (lotingState.selectedClubs.length === 0 && lotingState.drawn.length === 0 && lotingState.pot.length === 0) {
+  if (!lotingState.initialized) {
     initLotingForCat(lotingState.cat);
   }
 
@@ -2919,11 +2921,15 @@ function renderDraaiboekFinales() {
         <div class="dates-editor no-print">
           <div class="date-field">
             <label>📍 Organiserende Vereniging / Finalebaan:</label>
-            <input type="text" value="${fd.venue}" onchange="updateFinaledagField('venue', this.value)">
+            <select style="width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px; font-size:0.8rem; font-weight:700; color:#1e3a8a; background:white;" onchange="updateFinaledagField('venue', this.value)">
+              ${buildBaanClubOptions(fd.venue, "-- Kies finalebaan --")}
+            </select>
           </div>
           <div class="date-field">
             <label>⚖️ Neutrale Baan Beslissingswedstrijden:</label>
-            <input type="text" value="${fd.neutralVenue}" onchange="updateFinaledagField('neutralVenue', this.value)">
+            <select style="width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px; font-size:0.8rem; font-weight:700; color:#1e3a8a; background:white;" onchange="updateFinaledagField('neutralVenue', this.value)">
+              ${buildBaanClubOptions(fd.neutralVenue, "-- Kies neutrale baan --")}
+            </select>
           </div>
           <div class="date-field">
             <label>📝 Algemene opmerking finaledag:</label>
@@ -3080,6 +3086,41 @@ function printDraaiboekPdf() {
 }
 
 // ======================== TAB: REGLEMENTEN, WEDSTRIJDDAGEN & UITNODIGING ========================
+
+function buildSpeeldagSelectOptions(dayPrefix, currentVal, isFinaleRow) {
+  let opts = [];
+  if (isFinaleRow) {
+    opts = [
+      "Zondag 09:30 uur",
+      "Zondag 10:30 uur",
+      "Zondag 11:45 uur",
+      "Zondag 13:30 uur",
+      "Zondag 15:00 uur",
+      "Zondag 09:30 / 10:30 / 11:45"
+    ];
+  } else {
+    const times = ["18:30 uur", "18:45 uur", "19:00 uur", "19:15 uur", "19:30 uur"];
+    opts = times.map(t => `${dayPrefix} (${t})`);
+  }
+  if (currentVal && !opts.includes(currentVal)) {
+    opts.unshift(currentVal);
+  }
+  return opts.map(o => `<option value="${o}" ${o === currentVal ? 'selected' : ''}>${o}</option>`).join("");
+}
+
+function buildBaanClubOptions(currentVal, placeholder = "-- Kies baan / vereniging --") {
+  syncClubsAndRegistrations();
+  const clubs = [...(appData.clubs || DEFAULT_CLUBS)].sort();
+  let html = `<option value="">${placeholder}</option>`;
+  if (currentVal && !clubs.includes(currentVal)) {
+    html += `<option value="${currentVal}" selected>${currentVal}</option>`;
+  }
+  clubs.forEach(c => {
+    html += `<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`;
+  });
+  return html;
+}
+
 function renderReglementen() {
   ensureSeasonExtensions(appData, activeSeason);
   const isAdmin = !!currentUser;
@@ -3112,11 +3153,15 @@ function renderReglementen() {
           </div>
           <div class="date-field">
             <label>⚖️ Neutrale Baan Beslissingen:</label>
-            <input type="text" value="${fd.neutralVenue}" onchange="updateFinaledagField('neutralVenue', this.value)">
+            <select style="width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px; font-size:0.8rem; font-weight:700; color:#1e3a8a; background:white;" onchange="updateFinaledagField('neutralVenue', this.value)">
+              ${buildBaanClubOptions(fd.neutralVenue, "-- Kies neutrale baan --")}
+            </select>
           </div>
           <div class="date-field">
             <label>🏆 Finalebaan:</label>
-            <input type="text" value="${fd.venue}" onchange="updateFinaledagField('venue', this.value)">
+            <select style="width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px; font-size:0.8rem; font-weight:700; color:#1e3a8a; background:white;" onchange="updateFinaledagField('venue', this.value)">
+              ${buildBaanClubOptions(fd.venue, "-- Kies finalebaan --")}
+            </select>
           </div>
         </div>
       ` : ''}
@@ -3134,14 +3179,17 @@ function renderReglementen() {
             </tr>
           </thead>
           <tbody>
-            ${wDagen.map((w, idx) => `
-              <tr>
-                <td><strong>${w.ronde}</strong></td>
-                <td>${isAdmin ? `<input type="text" value="${w.veteranen}" style="width:100%; padding:2px 5px; border:1px solid #cbd5e1; border-radius:4px;" onchange="updateWedstrijddag(${idx}, 'veteranen', this.value)">` : w.veteranen}</td>
-                <td>${isAdmin ? `<input type="text" value="${w.senioren}" style="width:100%; padding:2px 5px; border:1px solid #cbd5e1; border-radius:4px;" onchange="updateWedstrijddag(${idx}, 'senioren', this.value)">` : w.senioren}</td>
-                <td>${isAdmin ? `<input type="text" value="${w.junioren}" style="width:100%; padding:2px 5px; border:1px solid #cbd5e1; border-radius:4px;" onchange="updateWedstrijddag(${idx}, 'junioren', this.value)">` : w.junioren}</td>
-              </tr>
-            `).join("")}
+            ${wDagen.map((w, idx) => {
+              const isFinRow = idx === wDagen.length - 1 || w.ronde.toLowerCase().includes("finaledag");
+              return `
+                <tr>
+                  <td><strong>${w.ronde}</strong></td>
+                  <td>${isAdmin ? `<select style="width:100%; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px; font-weight:600; background:white;" onchange="updateWedstrijddag(${idx}, 'veteranen', this.value)">${buildSpeeldagSelectOptions("Woensdag", w.veteranen, isFinRow)}</select>` : w.veteranen}</td>
+                  <td>${isAdmin ? `<select style="width:100%; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px; font-weight:600; background:white;" onchange="updateWedstrijddag(${idx}, 'senioren', this.value)">${buildSpeeldagSelectOptions("Donderdag", w.senioren, isFinRow)}</select>` : w.senioren}</td>
+                  <td>${isAdmin ? `<select style="width:100%; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px; font-weight:600; background:white;" onchange="updateWedstrijddag(${idx}, 'junioren', this.value)">${buildSpeeldagSelectOptions("Maandag", w.junioren, isFinRow)}</select>` : w.junioren}</td>
+                </tr>
+              `;
+            }).join("")}
           </tbody>
         </table>
         <div style="font-size:0.78rem; color:#64748b; margin-top:6px; display:flex; align-items:center; gap:6px;">
