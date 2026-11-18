@@ -3494,23 +3494,23 @@ function renderReglementen() {
         <table class="data-table">
           <thead>
             <tr>
-              <th style="width:74px;">Week</th>
-              <th style="width:110px;">Bijzonderheid</th>
-              <th style="width:66px;">Maandag</th>
-              <th>⚡ Programma Junioren (Ma)</th>
-              <th style="width:66px;">Woensdag</th>
-              <th>🥇 Programma Veteranen (Wo)</th>
-              <th style="width:66px;">Donderdag</th>
-              <th>🏆 Programma Senioren (Do)</th>
-              <th style="width:66px;">Zondag</th>
-              <th>🏆 Zondag (Finales)</th>
+              <th style="min-width:98px; width:98px; white-space:nowrap;">Week</th>
+              <th style="min-width:125px;">Bijzonderheid</th>
+              <th style="min-width:64px; width:64px;">Maandag</th>
+              <th style="min-width:145px;">⚡ Programma Junioren (Ma)</th>
+              <th style="min-width:64px; width:64px;">Woensdag</th>
+              <th style="min-width:145px;">🥇 Programma Veteranen (Wo)</th>
+              <th style="min-width:64px; width:64px;">Donderdag</th>
+              <th style="min-width:145px;">🏆 Programma Senioren (Do)</th>
+              <th style="min-width:64px; width:64px;">Zondag</th>
+              <th style="min-width:135px;">🏆 Zondag (Finales)</th>
               ${isAdmin ? '<th style="width:34px;"></th>' : ''}
             </tr>
           </thead>
           <tbody>
             ${(appData.zomerprogramma || []).map((z, idx) => `
               <tr style="${z.zonTask && z.zonTask !== '-' ? 'background:#fefce8;' : ''}">
-                <td><strong>${isAdmin ? `<input type="text" value="${z.week}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; font-weight:800;" onchange="updateZomerRow(${idx}, 'week', this.value)">` : z.week}</strong></td>
+                <td style="padding:5px 6px; white-space:nowrap;"><strong>${isAdmin ? `<input type="text" value="${z.week}" style="width:84px; padding:3px 5px; border:1px solid #cbd5e1; border-radius:4px; font-weight:800; text-align:center;" onchange="updateZomerRow(${idx}, 'week', this.value)">` : z.week}</strong></td>
                 <td>${isAdmin ? `<input type="text" value="${z.note || ''}" placeholder="-" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.74rem;" onchange="updateZomerRow(${idx}, 'note', this.value)">` : (z.note || '')}</td>
                 <td><strong>${isAdmin ? `<input type="text" value="${z.maDate || '-'}" style="width:100%; padding:2px 3px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateZomerRow(${idx}, 'maDate', this.value)">` : (z.maDate || '-')}</strong></td>
                 <td>${isAdmin ? `<select style="width:100%; padding:3px 4px; border:1px solid #cbd5e1; border-radius:4px; font-weight:${z.junTask && z.junTask !== '-' ? '700' : '400'}; background:${z.junTask && z.junTask !== '-' ? '#fef3c7' : 'white'};" onchange="updateZomerRow(${idx}, 'junTask', this.value)">${buildZomerTaskOptions('jun', z.junTask || '-')}</select>` : (z.junTask || '-')}</td>
