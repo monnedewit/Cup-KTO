@@ -346,6 +346,9 @@
       <button class="tab-btn" id="tab-jeugd-a" onclick="switchTab('jeugd-a')">🎯 Jeugd A Klasse</button>
       <button class="tab-btn" id="tab-jeugd-b" onclick="switchTab('jeugd-b')">🌱 Jeugd B Klasse</button>
       <button class="tab-btn" id="tab-scheids" onclick="switchTab('scheids')">📣 Scheidsrechters</button>
+      <button class="tab-btn" id="tab-inschrijvingen" onclick="switchTab('inschrijvingen')">📋 Inschrijvingen</button>
+      <button class="tab-btn" id="tab-draaiboek" onclick="switchTab('draaiboek')">🏁 Draaiboek Finales</button>
+      <button class="tab-btn" id="tab-reglementen" onclick="switchTab('reglementen')">📜 Reglementen &amp; Info</button>
       <button class="tab-btn" id="tab-loting" style="display:none; background:#fef3c7; color:#92400e; border:1px solid #f59e0b;" onclick="switchTab('loting')">🎲 Cuploting</button>
     </div>
     <div class="tabs-right">
@@ -794,6 +797,92 @@ function buildJeugdStructureForCount(compKey, teamCount, existingData) {
   return { teamCount: count, poules, knockout };
 }
 
+
+const DEFAULT_REGISTRATIONS_2026 = [
+  { club: "Beuningen", sen: true, vet: true, jCup: true, jA: true, jB: false, contact: "Rens Meier / Paul oude Weernink", phone: "06-51782062 / 06-55133832", email: "rensmeijer38@hotmail.com", note: "" },
+  { club: "De Toekomst", sen: true, vet: true, jCup: false, jA: false, jB: false, contact: "", phone: "", email: "", note: "" },
+  { club: "NB & De Toekomst", sen: false, vet: false, jCup: false, jA: true, jB: false, contact: "Gerald Hesselink / Sander Telgenhof", phone: "0541-670304 / 06-53607141", email: "mts.hesselink@gmail.com", note: "Combi A-cup team, thuisbaan De Toekomst" },
+  { club: "Java", sen: false, vet: false, jCup: false, jA: true, jB: true, contact: "Jochem Wennink", phone: "06-52505323", email: "jochemwennink@hotmail.com", note: "" },
+  { club: "Java & Kolkersveld", sen: true, vet: false, jCup: false, jA: false, jB: false, contact: "Jochem Wennink", phone: "06-52505323", email: "jochemwennink@hotmail.com", note: "" },
+  { club: "Lattrop Breklenkamp", sen: false, vet: true, jCup: true, jA: false, jB: false, contact: "Marcel Nijhuis / Niek Egbers", phone: "06-42965893 / 06-21996859", email: "nijhuis.fox@gmail.com", note: "" },
+  { club: "Lemselo", sen: true, vet: true, jCup: false, jA: false, jB: false, contact: "", phone: "", email: "", note: "" },
+  { club: "Mander", sen: true, vet: true, jCup: false, jA: true, jB: true, contact: "Ronald Snippert / Gerrit Westenbroek", phone: "06-28550823 / 06-57631608", email: "info@snippert-losser.nl", note: "" },
+  { club: "Nooit Gedacht", sen: true, vet: true, jCup: true, jA: true, jB: false, contact: "", phone: "", email: "", note: "" },
+  { club: "Noord Berghuizen", sen: true, vet: true, jCup: false, jA: false, jB: false, contact: "Gerard Finke", phone: "06-53122200", email: "gerard_finke@hotmail.com", note: "" },
+  { club: "Ons Streven", sen: true, vet: true, jCup: true, jA: false, jB: false, contact: "", phone: "", email: "", note: "" },
+  { club: "Oud Ootmarsum", sen: true, vet: true, jCup: false, jA: false, jB: true, contact: "Patric Kristen", phone: "06-38101538", email: "pjgkristen@gmail.com", note: "" },
+  { club: "Reutum", sen: false, vet: false, jCup: true, jA: false, jB: false, contact: "Anneriet Altena", phone: "06-23881470", email: "anneriet_a@hotmail.com", note: "" },
+  { club: "Steeds Vooruit", sen: true, vet: false, jCup: true, jA: false, jB: false, contact: "", phone: "", email: "", note: "" },
+  { club: "Steeds Vooruit & Ons Genoegen", sen: false, vet: true, jCup: false, jA: false, jB: false, contact: "", phone: "", email: "", note: "" },
+  { club: "Vooruit Losser", sen: true, vet: false, jCup: false, jA: false, jB: false, contact: "Edwin Koehorst / Vincent Bodde", phone: "06-52021287 / 06-22064993", email: "edwin.koehorst@home.nl", note: "" },
+  { club: "Vooruitzicht", sen: true, vet: true, jCup: false, jA: false, jB: false, contact: "", phone: "", email: "", note: "" },
+  { club: "De Brink", sen: false, vet: false, jCup: false, jA: true, jB: false, contact: "", phone: "", email: "", note: "" }
+];
+
+function createDefaultFinaledag(seasonLabel) {
+  return {
+    venue: "'t Beuningerveld (KV Beuningen)",
+    neutralVenue: "Ons Streven / Lemselo",
+    schedule: [
+      { time: "09:30 uur", cat: "Jeugd B Klasse", format: "4 rondes aaneen (4 worpen p.p.)", ref: "Neutrale scheidsrechter" },
+      { time: "10:30 uur", cat: "Jeugd A Klasse", format: "4 rondes aaneen (4 worpen p.p.)", ref: "Neutrale scheidsrechter" },
+      { time: "11:45 uur", cat: "Jeugd Cup Klasse", format: "4 rondes aaneen (4 worpen p.p.)", ref: "Neutrale scheidsrechter" },
+      { time: "13:30 uur", cat: "Veteranen", format: "3 rondes aaneen (3 worpen p.p.)", ref: "Neutrale scheidsrechter" },
+      { time: "15:00 uur", cat: "Senioren", format: "3 rondes aaneen (3 worpen p.p.)", ref: "Neutrale scheidsrechter" }
+    ],
+    checklist: [
+      { id: "c1", role: "WC", task: "Contact opnemen met organiserende vereniging over het evenement", done: false },
+      { id: "c2", role: "WC", task: "Overleggen of organiserende vereniging zelf scheidsrechters levert (zo niet: WC actie)", done: false },
+      { id: "c3", role: "WC", task: "Op tijd medailles en bokalen bestellen voor alle finales", done: false },
+      { id: "c4", role: "WC", task: "Zorgen dat alle prijzen op de finaledag aanwezig zijn", done: false },
+      { id: "c5", role: "Vereniging", task: "Zorgen dat er bij alle finales 4 neutrale stokleggers aanwezig zijn (niet bij jeugd)", done: false },
+      { id: "c6", role: "Vereniging", task: "Zorgen dat de baan en kantineomgeving er representatief uitzien", done: false },
+      { id: "c7", role: "Vereniging", task: "Geluidsinstallatie regelen zodat spelers en toeschouwers goed verstaanbaar zijn", done: false },
+      { id: "c8", role: "Organisatie", task: "10 minuten voor aanvang van elke finale: teams in een rij opstellen & voorstellen aan publiek", done: false },
+      { id: "c9", role: "Organisatie", task: "Direct na iedere finale prijsuitreiking verzorgen (netjes met namen)", done: false },
+      { id: "c10", role: "Organisatie", task: "Foto en kort verslag van ieder winnend team maken & mailen naar wc@kloatscheetbond.nl", done: false },
+      { id: "c11", role: "Vereniging", task: "Scheidsrechters voorzien van consumptie en bedanken", done: false },
+      { id: "c12", role: "Vereniging", task: "Jeugdspelers en begeleiders consumptie aanbieden (geldt niet voor senioren/veteranen)", done: false }
+    ],
+    notes: "Leiding van de finaledag is geheel in handen van de organiserende vereniging. Na afloop gezellige nazit!"
+  };
+}
+
+function createDefaultWedstrijddagen() {
+  return [
+    { ronde: "Ronde 1 – Wedstrijd 1", veteranen: "Woensdag (19:00 uur)", senioren: "Donderdag (19:00 uur)", junioren: "Maandag (19:00 uur)" },
+    { ronde: "Ronde 1 – Wedstrijd 2", veteranen: "Woensdag (19:00 uur)", senioren: "Donderdag (19:00 uur)", junioren: "Maandag (19:00 uur)" },
+    { ronde: "Ronde 1 – Wedstrijd 3 / Beslissing", veteranen: "Woensdag (19:00 uur)", senioren: "Donderdag (19:00 uur)", junioren: "Maandag (19:00 uur)" },
+    { ronde: "Kwartfinale – Wedstrijd 1 (na 1 mei)", veteranen: "Woensdag (19:15 uur)", senioren: "Donderdag (19:30 uur)", junioren: "Maandag (19:00 uur)" },
+    { ronde: "Kwartfinale – Wedstrijd 2 & Beslissing", veteranen: "Woensdag (19:15 uur)", senioren: "Donderdag (19:30 uur)", junioren: "Maandag (19:00 uur)" },
+    { ronde: "Halve Finale – Wed 1, Wed 2 & Beslissing", veteranen: "Woensdag (19:15 uur)", senioren: "Donderdag (19:30 uur)", junioren: "Maandag (19:00 uur)" },
+    { ronde: "Finaledag (Alle klassen)", veteranen: "Zondag 13:30 uur", senioren: "Zondag 15:00 uur", junioren: "Zondag 09:30 / 10:30 / 11:45" }
+  ];
+}
+
+function ensureSeasonExtensions(dataObj, seasonLabel) {
+  if (!Array.isArray(dataObj.registrations)) {
+    dataObj.registrations = DEFAULT_REGISTRATIONS_2026.map(r => ({
+      ...r,
+      sen: false, vet: false, jCup: false, jA: false, jB: false
+    }));
+  }
+  if (!dataObj.finaledag) {
+    dataObj.finaledag = createDefaultFinaledag(seasonLabel);
+  }
+  if (!Array.isArray(dataObj.wedstrijddagen)) {
+    dataObj.wedstrijddagen = createDefaultWedstrijddagen();
+  }
+  if (!dataObj.inviteMeta) {
+    dataObj.inviteMeta = {
+      deadline: "9 maart",
+      lotingMoment: "ALV maandagavond in clubgebouw Ons Genoegen",
+      contactSenVet: "wc@kloatscheetbond.nl",
+      contactJeugd: "martin@rolink.org"
+    };
+  }
+}
+
 function createEmptySeasonTemplate(seasonLabel) {
   return {
     season: seasonLabel,
@@ -864,7 +953,19 @@ function createEmptySeasonTemplate(seasonLabel) {
         poules: b.poules,
         knockout: b.knockout
       };
-    })()
+    })(),
+    registrations: DEFAULT_REGISTRATIONS_2026.map(r => ({
+      ...r,
+      sen: false, vet: false, jCup: false, jA: false, jB: false
+    })),
+    finaledag: createDefaultFinaledag(seasonLabel),
+    wedstrijddagen: createDefaultWedstrijddagen(),
+    inviteMeta: {
+      deadline: "9 maart",
+      lotingMoment: "ALV maandagavond in clubgebouw Ons Genoegen",
+      contactSenVet: "wc@kloatscheetbond.nl",
+      contactJeugd: "martin@rolink.org"
+    }
   };
 }
 
@@ -1000,6 +1101,7 @@ async function loadSeasonsAndData() {
     if (sRow && sRow.data) {
       appData = sRow.data;
       if (!appData.clubs) appData.clubs = [...DEFAULT_CLUBS];
+      ensureSeasonExtensions(appData, activeSeason);
       if (st) st.innerText = "✓ Live (" + activeSeason + ")";
     } else {
       appData = createEmptySeasonTemplate(activeSeason);
@@ -1115,6 +1217,7 @@ async function promptRenameClub(oldName) {
   const cleanNew = newName.trim();
 
   if (!appData.clubs) appData.clubs = [...DEFAULT_CLUBS];
+      ensureSeasonExtensions(appData, activeSeason);
   const idx = appData.clubs.indexOf(oldName);
   if (idx >= 0) {
     appData.clubs[idx] = cleanNew;
@@ -1161,6 +1264,7 @@ async function addNewClub() {
   const name = inp.value.trim();
   if (!name) return;
   if (!appData.clubs) appData.clubs = [...DEFAULT_CLUBS];
+      ensureSeasonExtensions(appData, activeSeason);
   if (!appData.clubs.includes(name)) {
     appData.clubs.push(name);
     appData.clubs.sort();
@@ -2292,6 +2396,7 @@ function renderCuploting() {
           </div>
 
           <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="lotingLoadFromRegistrations()" ${isDrawingActive ? 'disabled' : ''}>📋 Aangemelde verenigingen laden</button>
             <button class="btn btn-sm" onclick="lotingSelectAll(${needed})" ${isDrawingActive ? 'disabled' : ''}>Eerste ${needed} aanvinken</button>
             <button class="btn btn-sm" onclick="lotingClearSelection()" ${isDrawingActive ? 'disabled' : ''}>Alles uitvinken</button>
             <button class="btn btn-sm" onclick="openClubsModal()">+ Nieuwe vereniging/combi</button>
@@ -2508,6 +2613,586 @@ async function applyLotingToTournament() {
   }
 }
 
+
+async function lotingLoadFromRegistrations() {
+  ensureSeasonExtensions(appData, activeSeason);
+  const cat = lotingState.cat;
+  const fieldMap = { senioren: "sen", veteranen: "vet", jeugdCup: "jCup", jeugdA: "jA", jeugdB: "jB" };
+  const f = fieldMap[cat];
+  const regClubs = (appData.registrations || []).filter(r => r[f]).map(r => r.club);
+
+  if (regClubs.length === 0) {
+    return alert("Er zijn bij '📋 Inschrijvingen' nog geen verenigingen aangevinkt voor deze klasse.");
+  }
+
+  // Als aantal aangemelde teams past binnen het bereik (8..14 voor Sen/Vet, 3..8 voor Jeugd), pas aantal teams automatisch aan!
+  if ((cat === "senioren" || cat === "veteranen") && regClubs.length >= 8 && regClubs.length <= 14) {
+    if (cat === "senioren") {
+      const built = buildSeniorenMatchesForCount(regClubs.length, appData.senioren);
+      appData.senioren.teamCount = built.teamCount;
+      appData.senioren.slots = built.slots;
+      appData.senioren.matches = built.matches;
+    } else {
+      const built = buildVeteranenPoulesForCount(regClubs.length, appData.veteranen.poules);
+      appData.veteranen.teamCount = built.teamCount;
+      appData.veteranen.poules = built.poules;
+    }
+  } else if (cat.startsWith("jeugd") && regClubs.length >= 3 && regClubs.length <= 8) {
+    const built = buildJeugdStructureForCount(cat, regClubs.length, appData[cat]);
+    appData[cat].teamCount = built.teamCount;
+    appData[cat].poules = built.poules;
+    appData[cat].knockout = built.knockout;
+  }
+
+  // Zorg dat alle aangemelde clubs ook in appData.clubs staan
+  regClubs.forEach(c => {
+    if (!appData.clubs.includes(c)) appData.clubs.push(c);
+  });
+  appData.clubs.sort();
+
+  lotingState.selectedClubs = [...regClubs];
+  lotingState.pot = [];
+  lotingState.drawn = [];
+  lotingState.lastDrawnIndex = -1;
+  renderCuploting();
+  await saveState();
+}
+
+// ======================== TAB: INSCHRIJVINGEN & CONTACTEN ========================
+function renderInschrijvingen() {
+  ensureSeasonExtensions(appData, activeSeason);
+  const isAdmin = !!currentUser;
+  const regs = appData.registrations || [];
+
+  const totals = {
+    sen: regs.filter(r => r.sen).length,
+    vet: regs.filter(r => r.vet).length,
+    jCup: regs.filter(r => r.jCup).length,
+    jA: regs.filter(r => r.jA).length,
+    jB: regs.filter(r => r.jB).length
+  };
+
+  let html = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Cup-opgave &amp; Contactpersonen (${activeSeason})</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <span class="date-chip">Senioren: <strong>${totals.sen}</strong></span>
+          <span class="date-chip">Veteranen: <strong>${totals.vet}</strong></span>
+          <span class="date-chip">Jeugd Cup: <strong>${totals.jCup}</strong></span>
+          <span class="date-chip">Jeugd A: <strong>${totals.jA}</strong></span>
+          <span class="date-chip">Jeugd B: <strong>${totals.jB}</strong></span>
+          ${isAdmin ? `<button class="btn btn-sm" onclick="load2026RegistrationExample()" title="Vul de opgave van 2026 als voorbeeld in">📥 Voorbeeld 2026 laden</button>` : ''}
+        </div>
+      </div>
+
+      <p style="font-size:0.8rem; color:#475569; margin-bottom:12px;">
+        Vink per vereniging of combinatieteam aan in welke klassen zij meedoen. In <strong>🎲 Cuploting</strong> kun je deze lijst met één klik inladen in de lotingstrommel.
+      </p>
+
+      ${isAdmin ? `
+        <div style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; background:#f8fafc; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1;">
+          <input type="text" id="newRegClubInput" placeholder="Extra vereniging / combinatieteam toevoegen..." style="flex:1; min-width:220px; padding:5px 8px; border:1px solid var(--border); border-radius:4px;">
+          <button class="btn btn-primary btn-sm" onclick="addRegistrationRow()">+ Toevoegen aan opgave</button>
+        </div>
+      ` : ''}
+
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Vereniging / Combi</th>
+              <th style="text-align:center; width:72px;">Senioren<br><span style="color:var(--primary);">(${totals.sen})</span></th>
+              <th style="text-align:center; width:76px;">Veteranen<br><span style="color:var(--primary);">(${totals.vet})</span></th>
+              <th style="text-align:center; width:72px;">Jeugd Cup<br><span style="color:var(--primary);">(${totals.jCup})</span></th>
+              <th style="text-align:center; width:72px;">Jeugd A<br><span style="color:var(--primary);">(${totals.jA})</span></th>
+              <th style="text-align:center; width:72px;">Jeugd B<br><span style="color:var(--primary);">(${totals.jB})</span></th>
+              <th>Contactpersoon / Teamleider</th>
+              <th>Telefoon</th>
+              <th>E-mailadres</th>
+              <th>Opmerking / Thuisbaan</th>
+              ${isAdmin ? '<th style="width:42px;"></th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+            ${regs.map((r, idx) => `
+              <tr>
+                <td><strong>${r.club}</strong></td>
+                ${['sen', 'vet', 'jCup', 'jA', 'jB'].map(field => `
+                  <td style="text-align:center; background:${r[field] ? '#f0fdf4' : 'transparent'};">
+                    ${isAdmin
+                      ? `<input type="checkbox" style="width:16px; height:16px; cursor:pointer;" ${r[field] ? 'checked' : ''} onchange="toggleRegField(${idx}, '${field}', this.checked)">`
+                      : (r[field] ? '<span class="badge-ok">✓</span>' : '<span style="color:#cbd5e1;">-</span>')}
+                  </td>
+                `).join("")}
+                <td>${isAdmin ? `<input type="text" value="${r.contact || ''}" style="width:100%; padding:3px 5px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.78rem;" onchange="updateRegText(${idx}, 'contact', this.value)">` : (r.contact || '-')}</td>
+                <td>${isAdmin ? `<input type="text" value="${r.phone || ''}" style="width:100%; padding:3px 5px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.78rem;" onchange="updateRegText(${idx}, 'phone', this.value)">` : (r.phone || '-')}</td>
+                <td>${isAdmin ? `<input type="text" value="${r.email || ''}" style="width:100%; padding:3px 5px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.78rem;" onchange="updateRegText(${idx}, 'email', this.value)">` : (r.email || '-')}</td>
+                <td>${isAdmin ? `<input type="text" value="${r.note || ''}" style="width:100%; padding:3px 5px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.78rem;" onchange="updateRegText(${idx}, 'note', this.value)">` : (r.note || '')}</td>
+                ${isAdmin ? `<td style="text-align:center;"><button class="btn btn-sm" style="color:#dc2626; padding:1px 6px;" onclick="removeRegistrationRow(${idx})">&times;</button></td>` : ''}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+async function toggleRegField(idx, field, val) {
+  if (!currentUser) return;
+  appData.registrations[idx][field] = !!val;
+  renderInschrijvingen();
+  await saveState();
+}
+
+async function updateRegText(idx, field, val) {
+  if (!currentUser) return;
+  appData.registrations[idx][field] = val.trim();
+  await saveState();
+}
+
+async function addRegistrationRow() {
+  if (!currentUser) return;
+  const inp = document.getElementById("newRegClubInput");
+  const name = inp.value.trim();
+  if (!name) return;
+  appData.registrations.push({ club: name, sen: false, vet: false, jCup: false, jA: false, jB: false, contact: "", phone: "", email: "", note: "" });
+  if (!appData.clubs.includes(name)) {
+    appData.clubs.push(name);
+    appData.clubs.sort();
+  }
+  inp.value = "";
+  renderInschrijvingen();
+  await saveState();
+}
+
+async function removeRegistrationRow(idx) {
+  if (!currentUser) return;
+  if (confirm(`"${appData.registrations[idx].club}" verwijderen uit de inschrijflijst?`)) {
+    appData.registrations.splice(idx, 1);
+    renderInschrijvingen();
+    await saveState();
+  }
+}
+
+async function load2026RegistrationExample() {
+  if (!currentUser) return;
+  if (confirm("Wil je de vinkjes en contactgegevens van Cupopgave 2026 inladen in dit seizoen?")) {
+    appData.registrations = JSON.parse(JSON.stringify(DEFAULT_REGISTRATIONS_2026));
+    renderInschrijvingen();
+    await saveState();
+  }
+}
+
+// ======================== TAB: DRAAIBOEK CUPFINALES ========================
+function renderDraaiboekFinales() {
+  ensureSeasonExtensions(appData, activeSeason);
+  const isAdmin = !!currentUser;
+  const fd = appData.finaledag;
+  const finDate = appData.senioren?.dates?.final || "Zondag 20 juni 2027";
+  const doneCount = fd.checklist.filter(c => c.done).length;
+
+  let html = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🏁 Draaiboek KTO Cupfinales (${activeSeason})</div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span class="date-chip finale">📅 ${finDate}</span>
+          <span class="date-chip">📍 ${fd.venue}</span>
+          <button class="btn btn-accent btn-sm" onclick="printDraaiboekPdf()">🖨️ Draaiboek Printen / PDF</button>
+        </div>
+      </div>
+
+      ${isAdmin ? `
+        <div class="dates-editor no-print">
+          <div class="date-field">
+            <label>📍 Organiserende Vereniging / Finalebaan:</label>
+            <input type="text" value="${fd.venue}" onchange="updateFinaledagField('venue', this.value)">
+          </div>
+          <div class="date-field">
+            <label>⚖️ Neutrale Baan Beslissingswedstrijden:</label>
+            <input type="text" value="${fd.neutralVenue}" onchange="updateFinaledagField('neutralVenue', this.value)">
+          </div>
+          <div class="date-field">
+            <label>📝 Algemene opmerking finaledag:</label>
+            <input type="text" value="${fd.notes}" onchange="updateFinaledagField('notes', this.value)">
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="loting-grid">
+        <!-- LINKERKOLOM: TIJDSCHEMA FINALEDAG -->
+        <div>
+          <h3 style="color:var(--primary); font-size:0.98rem; margin-bottom:8px;">⏰ Tijdschema Finaledag (${finDate})</h3>
+          <table class="data-table" style="margin-bottom:12px;">
+            <thead>
+              <tr>
+                <th style="width:105px;">Aanvang</th>
+                <th>Finale Klasse</th>
+                <th>Spelvorm</th>
+                <th>Leiding / Scheids</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${fd.schedule.map((row, idx) => `
+                <tr>
+                  <td><strong>${isAdmin ? `<input type="text" value="${row.time}" style="width:85px; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; font-weight:800;" onchange="updateFinaleSchedule(${idx}, 'time', this.value)">` : row.time}</strong></td>
+                  <td><strong>${row.cat}</strong></td>
+                  <td>${row.format}</td>
+                  <td>${isAdmin ? `<input type="text" value="${row.ref}" style="width:100%; padding:2px 5px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.78rem;" onchange="updateFinaleSchedule(${idx}, 'ref', this.value)">` : row.ref}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+
+          <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:7px; padding:10px 12px; font-size:0.8rem; color:#78350f;">
+            <strong>📌 Belangrijke afspraken finaledag:</strong>
+            <ul style="padding-left:18px; margin-top:5px; line-height:1.5;">
+              <li><strong>10 minuten voor aanvang</strong> van elke finale stellen de teams zich overzichtelijk op in een rij en worden voorgesteld aan het publiek.</li>
+              <li><strong>Direct na iedere finale</strong> volgt de prijsuitreiking (netjes met namen).</li>
+              <li>Van ieder winnend team wordt een <strong>foto en kort verslag</strong> gemaakt en doorgestuurd naar <strong>wc@kloatscheetbond.nl</strong> voor plaatsing op de site.</li>
+              <li><strong>Consumpties:</strong> Scheidsrechters krijgen een consumptie en worden bedankt. Jeugdspelers en hun begeleiders krijgen een consumptie aangeboden door de organiserende vereniging (geldt niet voor senioren en veteranen).</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- RECHTERKOLOM: ACTIELIJST WC & ORGANISERENDE VERENIGING -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="color:var(--primary); font-size:0.98rem;">✅ Draaiboek Checklist (WC &amp; Vereniging)</h3>
+            <span class="badge-ok">${doneCount} / ${fd.checklist.length} afgevinkt</span>
+          </div>
+
+          <div style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:white;">
+            ${fd.checklist.map((item, idx) => `
+              <label style="display:flex; align-items:flex-start; gap:9px; padding:7px 10px; border-bottom:1px solid #e2e8f0; cursor:pointer; background:${item.done ? '#f0fdf4' : 'white'};">
+                <input type="checkbox" style="margin-top:2px; width:16px; height:16px;" ${item.done ? 'checked' : ''} ${!isAdmin ? 'disabled' : ''} onchange="toggleFinaleChecklist(${idx}, this.checked)">
+                <div style="flex:1; font-size:0.81rem; ${item.done ? 'text-decoration:line-through; color:#64748b;' : 'color:#0f172a; font-weight:600;'}">
+                  <span class="badge-ok" style="font-size:0.68rem; margin-right:5px; background:${item.role === 'WC' ? '#dbeafe' : (item.role === 'Vereniging' ? '#fef3c7' : '#e2e8f0')}; color:#1e293b;">${item.role}</span>
+                  ${item.task}
+                </div>
+              </label>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+async function updateFinaledagField(field, val) {
+  if (!currentUser) return;
+  appData.finaledag[field] = val.trim();
+  renderDraaiboekFinales();
+  await saveState();
+}
+
+async function updateFinaleSchedule(idx, field, val) {
+  if (!currentUser) return;
+  appData.finaledag.schedule[idx][field] = val.trim();
+  await saveState();
+}
+
+async function toggleFinaleChecklist(idx, val) {
+  if (!currentUser) return;
+  appData.finaledag.checklist[idx].done = !!val;
+  renderDraaiboekFinales();
+  await saveState();
+}
+
+function printDraaiboekPdf() {
+  ensureSeasonExtensions(appData, activeSeason);
+  const fd = appData.finaledag;
+  const finDate = appData.senioren?.dates?.final || "Zondag 20 juni 2027";
+  const pdfDiv = document.getElementById("pdfPrintView");
+
+  pdfDiv.innerHTML = `
+    <div class="pdf-banner">
+      <div>
+        <h2>🏁 DRAAIBOEK KTO CUPFINALES ${activeSeason}</h2>
+        <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+          Klootschietersbond Twente Oost &bull; Organiserende vereniging / baan: <strong>${fd.venue}</strong>
+        </div>
+      </div>
+      <div class="pdf-meta-right">
+        <div>Finaledag: ${finDate}</div>
+        <div style="font-size:0.75rem; color:#64748b;">Verslagen &amp; foto's: wc@kloatscheetbond.nl</div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1.15fr; gap:18px;">
+      <div>
+        <h3 style="color:#0f5132; margin-bottom:6px; font-size:0.95rem;">⏰ Tijdschema Finaledag</h3>
+        <table class="pdf-ref-table" style="margin-top:0;">
+          <thead><tr><th>Aanvang</th><th>Klasse</th><th>Spelvorm</th><th>Leiding</th></tr></thead>
+          <tbody>
+            ${fd.schedule.map(r => `<tr><td><strong>${r.time}</strong></td><td><strong>${r.cat}</strong></td><td>${r.format}</td><td>${r.ref}</td></tr>`).join("")}
+          </tbody>
+        </table>
+        <div class="pdf-rules-box" style="margin-top:12px;">
+          <strong>Algemene Richtlijnen Finaledag:</strong>
+          <ul style="padding-left:16px; margin-top:4px; line-height:1.45;">
+            <li>10 min. voor aanvang opstellen in een rij en voorstellen aan het publiek.</li>
+            <li>Direct na iedere finale prijsuitreiking met namen.</li>
+            <li>Foto &amp; verslag van winnend team mailen naar <strong>wc@kloatscheetbond.nl</strong>.</li>
+            <li>Consumptie voor scheidsrechters + jeugdspelers en begeleiders (niet voor sen/vet).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="color:#0f5132; margin-bottom:6px; font-size:0.95rem;">✅ Takenlijst WC &amp; Organiserende Vereniging</h3>
+        <table class="pdf-ref-table" style="margin-top:0;">
+          <thead><tr><th style="width:75px;">Wie</th><th>Actiepunt</th><th style="width:45px; text-align:center;">Check</th></tr></thead>
+          <tbody>
+            ${fd.checklist.map(c => `<tr><td><strong>${c.role}</strong></td><td>${c.task}</td><td style="text-align:center;">${c.done ? '✓' : '☐'}</td></tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  pdfDiv.style.display = "block";
+  setTimeout(() => {
+    window.print();
+    pdfDiv.style.display = "none";
+  }, 250);
+}
+
+// ======================== TAB: REGLEMENTEN, WEDSTRIJDDAGEN & UITNODIGING ========================
+function renderReglementen() {
+  ensureSeasonExtensions(appData, activeSeason);
+  const isAdmin = !!currentUser;
+  const fd = appData.finaledag;
+  const meta = appData.inviteMeta;
+  const wDagen = appData.wedstrijddagen || createDefaultWedstrijddagen();
+
+  // Bereken geboortejaren automatisch o.b.v. het eindjaar van het actieve seizoen (bijv. 2026/2027 -> 2027)
+  const yearMatch = activeSeason.match(/20\d{2}/g);
+  const playYear = yearMatch ? parseInt(yearMatch[yearMatch.length - 1]) : 2027;
+  const gebJaarA = playYear - 15;
+  const gebJaarB = playYear - 13;
+
+  let html = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📜 KTO Cup Reglementen, Wedstrijddagen &amp; Uitnodiging (${activeSeason})</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn btn-accent btn-sm" onclick="printReglementenPdf('uitnodiging')">🖨️ Uitnodiging PDF</button>
+          <button class="btn btn-sm" onclick="printReglementenPdf('reglementen')">🖨️ Reglementen PDF</button>
+        </div>
+      </div>
+
+      ${isAdmin ? `
+        <div class="dates-editor no-print">
+          <div class="date-field">
+            <label>📅 Uiterste Opgavedatum:</label>
+            <input type="text" value="${meta.deadline}" onchange="updateInviteMeta('deadline', this.value)">
+          </div>
+          <div class="date-field">
+            <label>🎲 Loting tijdens ALV:</label>
+            <input type="text" value="${meta.lotingMoment}" onchange="updateInviteMeta('lotingMoment', this.value)">
+          </div>
+          <div class="date-field">
+            <label>⚖️ Neutrale Baan Beslissingen:</label>
+            <input type="text" value="${fd.neutralVenue}" onchange="updateFinaledagField('neutralVenue', this.value)">
+          </div>
+          <div class="date-field">
+            <label>🏆 Finalebaan:</label>
+            <input type="text" value="${fd.venue}" onchange="updateFinaledagField('venue', this.value)">
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- BLOK 1: VASTE SPEELDAGEN & AANVANGSTIJDEN -->
+      <h3 style="color:var(--primary); font-size:0.98rem; margin-bottom:8px;">📅 Vaste Speeldagen &amp; Aanvangstijden (${activeSeason})</h3>
+      <div style="overflow-x:auto; margin-bottom:18px;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Toernooifase</th>
+              <th>🥇 Veteranen (Woensdag)</th>
+              <th>🏆 Senioren (Donderdag)</th>
+              <th>⚡ Junioren (Maandag)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${wDagen.map((w, idx) => `
+              <tr>
+                <td><strong>${w.ronde}</strong></td>
+                <td>${isAdmin ? `<input type="text" value="${w.veteranen}" style="width:100%; padding:2px 5px; border:1px solid #cbd5e1; border-radius:4px;" onchange="updateWedstrijddag(${idx}, 'veteranen', this.value)">` : w.veteranen}</td>
+                <td>${isAdmin ? `<input type="text" value="${w.senioren}" style="width:100%; padding:2px 5px; border:1px solid #cbd5e1; border-radius:4px;" onchange="updateWedstrijddag(${idx}, 'senioren', this.value)">` : w.senioren}</td>
+                <td>${isAdmin ? `<input type="text" value="${w.junioren}" style="width:100%; padding:2px 5px; border:1px solid #cbd5e1; border-radius:4px;" onchange="updateWedstrijddag(${idx}, 'junioren', this.value)">` : w.junioren}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        <p style="font-size:0.75rem; color:#64748b; margin-top:5px;">
+          ℹ️ Rekening houden met competitieprogramma afdeling Dames (zij spelen vrijwel elke dinsdagavond). In onderling overleg mag een wedstrijd eerder worden gespeeld (mits gemeld aan WC &amp; scheidsrechter).
+        </p>
+      </div>
+
+      <!-- BLOK 2: REGLEMENTEN NAAST ELKAAR -->
+      <div class="loting-grid">
+        <!-- SENIOREN & VETERANEN -->
+        <div class="poule-box" style="border-top: 4px solid var(--primary);">
+          <h3 style="color:var(--primary); font-size:1rem; margin-bottom:8px;">🏆 Reglement Senioren &amp; Veteranen</h3>
+          <ul style="padding-left:18px; font-size:0.81rem; line-height:1.55; color:#1e293b;">
+            <li><strong>Teamsamenstelling:</strong> 8 personen per team. Bij Senioren max. 2 junioren per vereniging (1 team). Bij Veteranen 8 personen per team; meerdere teams per vereniging toegestaan (vrije teamindeling).</li>
+            <li><strong>Speeldagen &amp; Tijden:</strong> Veteranen op woensdag, Senioren op donderdag. Vóór 1 mei aanvang <strong>19:00 uur</strong>. Na 1 mei: Veteranen <strong>19:15 uur</strong> en Senioren <strong>19:30 uur</strong>.</li>
+            <li><strong>Spelvorm:</strong> 3 rondes aaneengesloten (3 worpen per speler). Aanloop bij de meetlat in de lengterichting (NKB-reglement). Volgorde mag in de 2e of 3e ronde gewijzigd worden.</li>
+            <li><strong>Invallers:</strong> Meerdere invallers per wedstrijd toegestaan (ook bij blessure/ziekte tijdens de wedstrijd; junior mag alleen vervangen worden door een andere junior).</li>
+            <li><strong>Scheidsrechter &amp; Vergoeding:</strong> Neutrale scheidsrechter aangewezen door WC. Vergoeding <strong>€ 10,-</strong> te betalen door thuisclub vóór aanvang (bij beslissingswedstrijd 50/50). Boete bij verstek of vergeten kennisgeving: <strong>€ 12,-</strong>.</li>
+            <li><strong>Hulpleiders:</strong> Elke vereniging zorgt voor 2 niet-meespelende hulpleiders (stok in de lengte leggen).</li>
+            <li><strong>Beslissingswedstrijden:</strong> Op neutrale baan (<strong>${fd.neutralVenue}</strong>).</li>
+            <li><strong>Uitslag doorgeven:</strong> Thuisclub geeft op de speeldag uitslag en kort verslag door aan <strong>${meta.contactSenVet}</strong>.</li>
+          </ul>
+        </div>
+
+        <!-- JUNIOREN -->
+        <div class="poule-box" style="border-top: 4px solid var(--accent);">
+          <h3 style="color:#92400e; font-size:1rem; margin-bottom:8px;">⚡ Reglement Junioren (Cup / A / B Klasse)</h3>
+          <ul style="padding-left:18px; font-size:0.81rem; line-height:1.55; color:#1e293b;">
+            <li><strong>Teamsamenstelling:</strong> <strong>6 personen</strong> per team. Een junior mag slechts 1 keer per wedstrijddag worden opgesteld.</li>
+            <li><strong>Leeftijdsgrenzen (${playYear}):</strong>
+              <br>&bull; <strong>CUP-klasse:</strong> Totaalleeftijd maximaal <strong>96 jaar</strong>.
+              <br>&bull; <strong>A-klasse:</strong> Totaalleeftijd maximaal <strong>78 jaar</strong>, oudste speler max. 15 jr (geb. <strong>${gebJaarA}</strong>).
+              <br>&bull; <strong>B-klasse:</strong> Totaalleeftijd maximaal <strong>64 jaar</strong>, oudste speler max. 13 jr (geb. <strong>${gebJaarB}</strong>).
+              <br><em>(Bij meisjes wordt per speelster 1 jaar in mindering gebracht voor de telling.)</em>
+            </li>
+            <li><strong>Speeldag &amp; Tijd:</strong> Zoveel mogelijk op <strong>maandag om 19:00 uur</strong>.</li>
+            <li><strong>Spelvorm:</strong> <strong>4 rondes</strong> aaneengesloten (4 worpen per speler). Volgorde mag in 2e, 3e of 4e ronde gewijzigd worden.</li>
+            <li><strong>Invallers:</strong> Maximaal <strong>1 invaller</strong> per wedstrijd toegestaan.</li>
+            <li><strong>Leiding:</strong> Voor elkaar leiden (gelijk aan competitie). De finale wordt geleid door een neutrale scheidsrechter (geen neutrale stokleggers).</li>
+            <li><strong>Beslissingswedstrijden:</strong> Op neutrale baan (<strong>${fd.neutralVenue}</strong>).</li>
+            <li><strong>Uitslag doorgeven:</strong> Thuisclub geeft op de speeldag uitslag en kort verslag door aan <strong>${meta.contactSenVet}</strong> (opgave jeugd via <strong>${meta.contactJeugd}</strong>).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+async function updateInviteMeta(field, val) {
+  if (!currentUser) return;
+  appData.inviteMeta[field] = val.trim();
+  await saveState();
+}
+
+async function updateWedstrijddag(idx, field, val) {
+  if (!currentUser) return;
+  appData.wedstrijddagen[idx][field] = val.trim();
+  await saveState();
+}
+
+function printReglementenPdf(mode) {
+  ensureSeasonExtensions(appData, activeSeason);
+  const fd = appData.finaledag;
+  const meta = appData.inviteMeta;
+  const finDate = appData.senioren?.dates?.final || "Zondag 20 juni 2027";
+  const yearMatch = activeSeason.match(/20\d{2}/g);
+  const playYear = yearMatch ? parseInt(yearMatch[yearMatch.length - 1]) : 2027;
+  const pdfDiv = document.getElementById("pdfPrintView");
+
+  if (mode === "uitnodiging") {
+    pdfDiv.innerHTML = `
+      <div class="pdf-banner">
+        <div>
+          <h2>🏆 UITNODIGING KTO CUP ${activeSeason}</h2>
+          <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+            Klootschietersbond Twente Oost (KTO) &bull; Aan het bestuur van alle aangesloten verenigingen
+          </div>
+        </div>
+        <div class="pdf-meta-right">
+          <div>Seizoen ${activeSeason}</div>
+          <div style="font-size:0.75rem; color:#64748b;">Finale: ${finDate}</div>
+        </div>
+      </div>
+
+      <div style="font-size:0.92rem; line-height:1.6; color:#0f172a; max-width:900px;">
+        <p style="margin-bottom:10px;">Geacht bestuur, sportvrienden,</p>
+        <p style="margin-bottom:10px;">
+          Gaarne ontvangen wij van u uiterlijk <strong>${meta.deadline}</strong> uw opgave voor deelname aan de <strong>Senioren- en Veteranencup</strong> en van het aantal teams waarmee u wilt deelnemen aan de diverse cupklassen voor <strong>Junioren</strong>, onder vermelding van de Teamleider en Scheidsrechter (Sen. &amp; Vet.).
+        </p>
+        <div style="background:#f0fdf4; border:1.5px solid #16a34a; border-radius:6px; padding:10px 14px; margin-bottom:12px;">
+          <strong>Klassenindeling Junioren (teams van 6 spelers, jaar ${playYear}):</strong>
+          <ul style="padding-left:20px; margin-top:4px;">
+            <li><strong>Cup klasse:</strong> Totaalleeftijd maximaal 96 jaar.</li>
+            <li><strong>A klasse:</strong> Totaalleeftijd maximaal 78 jaar, oudste speler maximaal 15 jaar (geb. ${playYear - 15}).</li>
+            <li><strong>B klasse:</strong> Totaalleeftijd maximaal 64 jaar, oudste speler maximaal 13 jaar (geb. ${playYear - 13}).</li>
+          </ul>
+          <div style="font-size:0.82rem; margin-top:4px;"><em>Bij meisjes geldt dat per speelster één jaar in mindering wordt gebracht voor de telling.</em></div>
+        </div>
+        <p style="margin-bottom:8px;">
+          <strong>Loting:</strong> De loting voor het hele cupschema vindt plaats op de <strong>${meta.lotingMoment}</strong>.
+        </p>
+        <p style="margin-bottom:8px;">
+          <strong>Opgave:</strong> Voor Senioren en Veteranen per e-mail aan de wedstrijdcommissie via <strong>${meta.contactSenVet}</strong> en voor de Juniorencup aan <strong>${meta.contactJeugd}</strong>.
+        </p>
+        <p style="margin-bottom:14px;">
+          <strong>Finaledag:</strong> De finales worden gespeeld op <strong>${finDate}</strong> op <strong>${fd.venue}</strong>.
+        </p>
+        <p>Met sportieve groet,<br><strong>Wedstrijd- en Juniorencommissie KTO</strong></p>
+      </div>
+    `;
+  } else {
+    pdfDiv.innerHTML = `
+      <div class="pdf-banner">
+        <div>
+          <h2>📜 REGLEMENTEN KTO CUP ${activeSeason}</h2>
+          <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+            Klootschietersbond Twente Oost &bull; Senioren, Veteranen &amp; Junioren
+          </div>
+        </div>
+        <div class="pdf-meta-right">
+          <div>Neutrale baan: ${fd.neutralVenue}</div>
+          <div>Finalebaan: ${fd.venue} (${finDate})</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; font-size:0.78rem; line-height:1.45;">
+        <div style="border:1px solid #64748b; border-radius:6px; padding:10px;">
+          <h3 style="color:#0f5132; margin-bottom:6px;">Senioren &amp; Veteranen</h3>
+          <ul style="padding-left:16px;">
+            <li><strong>Teams:</strong> 8 personen (Senioren max. 2 junioren, 1 team; Veteranen meerdere teams mogelijk, vrije indeling).</li>
+            <li><strong>Speeldagen:</strong> Veteranen woensdag, Senioren donderdag. Vóór 1 mei 19:00 uur; na 1 mei Vet 19:15 uur, Sen 19:30 uur.</li>
+            <li><strong>Spelvorm:</strong> 3 rondes aaneen (3 worpen p.p.). Aanloop bij meetlat in lengterichting.</li>
+            <li><strong>Scheidsrechter:</strong> Vergoeding € 10,- door thuisclub (beslissing 50/50). Boete verstek/vergeten: € 12,-.</li>
+            <li><strong>Hulpleiders:</strong> 2 niet-meespelende hulpleiders per team (stok in de lengte leggen).</li>
+            <li><strong>Invallers:</strong> Meerdere invallers toegestaan (junior alleen door junior).</li>
+            <li><strong>Uitslag:</strong> Thuisclub mailt op speeldag uitslag + verslag naar ${meta.contactSenVet}.</li>
+          </ul>
+        </div>
+        <div style="border:1px solid #64748b; border-radius:6px; padding:10px;">
+          <h3 style="color:#92400e; margin-bottom:6px;">Junioren (Cup / A / B Klasse)</h3>
+          <ul style="padding-left:16px;">
+            <li><strong>Teams:</strong> 6 personen per team. Max. 1 keer per wedstrijddag opstellen.</li>
+            <li><strong>Leeftijd (${playYear}):</strong> CUP max. 96 jr | A max. 78 jr (max 15 jr / geb. ${playYear - 15}) | B max. 64 jr (max 13 jr / geb. ${playYear - 13}). Meisjes -1 jr.</li>
+            <li><strong>Speeldag:</strong> Zoveel mogelijk op maandag om 19:00 uur.</li>
+            <li><strong>Spelvorm:</strong> 4 rondes aaneen (4 worpen p.p.). Volgorde vrij te wijzigen in ronde 2, 3 of 4.</li>
+            <li><strong>Invallers:</strong> Max. 1 invaller per wedstrijd toegestaan.</li>
+            <li><strong>Leiding:</strong> Voor elkaar leiden (finale neutrale scheidsrechter, geen neutrale stokleggers).</li>
+            <li><strong>Uitslag:</strong> Thuisclub mailt op speeldag uitslag + verslag naar ${meta.contactSenVet}.</li>
+          </ul>
+        </div>
+      </div>
+    `;
+  }
+
+  pdfDiv.style.display = "block";
+  setTimeout(() => {
+    window.print();
+    pdfDiv.style.display = "none";
+  }, 250);
+}
+
 function renderCurrentTab() {
   if (currentTab === "senioren") renderSenioren();
   else if (currentTab === "veteranen") renderPouleCompetition("veteranen");
@@ -2515,6 +3200,9 @@ function renderCurrentTab() {
   else if (currentTab === "jeugd-a") renderPouleCompetition("jeugdA");
   else if (currentTab === "jeugd-b") renderPouleCompetition("jeugdB");
   else if (currentTab === "scheids") renderScheidsrechters();
+  else if (currentTab === "inschrijvingen") renderInschrijvingen();
+  else if (currentTab === "draaiboek") renderDraaiboekFinales();
+  else if (currentTab === "reglementen") renderReglementen();
   else if (currentTab === "loting") renderCuploting();
 }
 
