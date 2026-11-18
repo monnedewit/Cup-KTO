@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KTO Cup 2026 | Live Toernooischema & Uitslagen</title>
+<title>KTO Cup | Live Toernooischema & Loting</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -24,43 +24,57 @@
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   body { background: var(--bg); color: var(--text); font-size: 0.88rem; padding: 14px; }
 
-  .container { max-width: 1400px; margin: 0 auto; }
+  .container { max-width: 1440px; margin: 0 auto; }
 
   header {
     background: linear-gradient(135deg, #0a3622 0%, var(--primary) 60%, var(--primary-light) 100%);
-    color: white; padding: 16px 22px; border-radius: 10px;
+    color: white; padding: 14px 20px; border-radius: 10px;
     display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
-    box-shadow: 0 4px 12px rgba(15, 81, 50, 0.2); margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(15, 81, 50, 0.2); margin-bottom: 14px;
   }
-  header h1 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.3px; }
-  header p { font-size: 0.82rem; color: #bbf7d0; margin-top: 2px; }
+  header h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  header p { font-size: 0.8rem; color: #bbf7d0; margin-top: 2px; }
 
-  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .season-bar {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .season-select {
+    background: white; color: var(--primary); font-weight: 800; font-size: 0.84rem;
+    border: none; border-radius: 5px; padding: 3px 8px; cursor: pointer;
+  }
+
+  .header-actions { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
 
   .auth-pill {
     background: rgba(255, 255, 255, 0.16);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;
+    padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 700;
   }
 
   .btn {
-    padding: 7px 13px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+    padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
     border: 1px solid var(--border); background: white; color: var(--text);
-    display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s;
   }
   .btn:hover { background: #f8fafc; transform: translateY(-1px); }
   .btn-primary { background: var(--primary-light); color: white; border-color: var(--primary-light); }
   .btn-primary:hover { background: var(--primary); }
-  .btn-sm { padding: 4px 9px; font-size: 0.76rem; }
+  .btn-accent { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-sm { padding: 4px 8px; font-size: 0.75rem; }
 
   .nav-tabs {
-    display: flex; gap: 6px; background: white; padding: 6px; border-radius: 9px;
-    border: 1px solid var(--border); margin-bottom: 16px; flex-wrap: wrap;
+    display: flex; justify-content: space-between; align-items: center; gap: 6px;
+    background: white; padding: 6px; border-radius: 9px;
+    border: 1px solid var(--border); margin-bottom: 14px; flex-wrap: wrap;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   }
+  .tabs-left { display: flex; gap: 5px; flex-wrap: wrap; }
+  .tabs-right { display: flex; gap: 6px; flex-wrap: wrap; }
   .tab-btn {
-    padding: 9px 16px; border-radius: 6px; border: none; background: transparent;
-    font-weight: 700; font-size: 0.86rem; color: #475569; cursor: pointer; transition: all 0.15s;
+    padding: 8px 14px; border-radius: 6px; border: none; background: transparent;
+    font-weight: 700; font-size: 0.84rem; color: #475569; cursor: pointer; transition: all 0.15s;
     display: inline-flex; align-items: center; gap: 6px;
   }
   .tab-btn:hover { background: #f1f5f9; color: var(--text); }
@@ -68,107 +82,210 @@
 
   .card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
-    padding: 16px 18px; margin-bottom: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    padding: 16px 18px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.03);
   }
   .card-header {
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
     border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 14px;
   }
-  .card-title { font-size: 1.12rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+  .card-title { font-size: 1.1rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
 
-  .dates-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  /* Editable Dates Bar */
+  .dates-editor {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px;
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;
+    margin-bottom: 14px;
+  }
+  .date-field label {
+    display: block; font-size: 0.72rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 3px;
+  }
+  .date-field input {
+    width: 100%; padding: 4px 8px; border: 1px solid var(--border); border-radius: 5px;
+    font-size: 0.8rem; font-weight: 700; color: #1e3a8a; background: white;
+  }
   .date-chip {
     background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;
     padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;
   }
   .date-chip.finale { background: #fef3c7; border-color: #fde68a; color: #92400e; }
 
+  /* Team & Referee Dropdowns */
+  select.club-select {
+    width: 100%; padding: 4px 6px; border-radius: 5px; border: 1px solid var(--border);
+    font-size: 0.8rem; font-weight: 700; color: var(--text); background: white; cursor: pointer;
+  }
+  select.club-select.empty-slot {
+    border-color: #cbd5e1; background: #fffbeb; color: #92400e; font-weight: 600;
+  }
+  select.ref-select {
+    padding: 3px 6px; border-radius: 5px; border: 1px solid #fde68a;
+    font-size: 0.76rem; font-weight: 700; color: #92400e; background: #fffbeb; cursor: pointer;
+    max-width: 170px;
+  }
+
+  /* Visual Bracket */
   .bracket-wrapper { overflow-x: auto; padding-bottom: 10px; }
-  .bracket { display: flex; gap: 24px; min-width: 920px; align-items: stretch; }
-  .bracket-round { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 12px; }
+  .bracket { display: flex; gap: 22px; min-width: 980px; align-items: stretch; }
+  .bracket-round { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 10px; }
   .round-title {
-    text-align: center; font-weight: 800; font-size: 0.85rem; text-transform: uppercase;
+    text-align: center; font-weight: 800; font-size: 0.82rem; text-transform: uppercase;
     color: var(--primary); background: var(--primary-bg); padding: 6px; border-radius: 6px;
-    border: 1px solid #bbf7d0; margin-bottom: 6px;
+    border: 1px solid #bbf7d0; margin-bottom: 4px;
+  }
+  .round-subdate {
+    display: block; font-size: 0.7rem; font-weight: 600; color: #166534; text-transform: none; margin-top: 2px;
   }
   .match-box {
     background: #f8fafc; border: 1px solid var(--border); border-left: 4px solid var(--primary);
-    border-radius: 6px; padding: 8px 10px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    border-radius: 6px; padding: 7px 9px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
   }
   .match-box.needs-decision { border-left-color: var(--danger); background: #fffafa; }
-  .match-box.bye-box { border-left-color: #94a3b8; opacity: 0.85; background: #f1f5f9; }
-  .match-meta { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
-  .team-line { display: flex; justify-content: space-between; align-items: center; padding: 3px 5px; border-radius: 4px; font-weight: 600; font-size: 0.83rem; }
+  .match-box.bye-box { border-left-color: #64748b; background: #f1f5f9; }
+  .match-meta { display: flex; justify-content: space-between; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--muted); font-weight: 700; margin-bottom: 5px; }
+  .team-line { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 3px 5px; border-radius: 4px; font-weight: 600; font-size: 0.82rem; }
   .team-line.winner { background: #dcfce7; color: #065f46; font-weight: 800; }
   .team-line.tbd { color: #94a3b8; font-style: italic; font-weight: 500; }
-  .score-pills { display: flex; gap: 3px; }
+  .lot-nr {
+    display: inline-block; min-width: 20px; font-weight: 800; font-size: 0.74rem;
+    color: var(--primary); background: #dcfce7; border-radius: 3px; text-align: center; padding: 1px 3px;
+  }
+  .score-pills { display: flex; gap: 3px; flex-shrink: 0; }
   .sc-pill { background: white; border: 1px solid var(--border); padding: 1px 5px; border-radius: 3px; font-size: 0.74rem; font-weight: 800; min-width: 20px; text-align: center; }
 
   .champion-card {
     background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
     border: 2px solid #f59e0b; border-radius: 8px; padding: 14px; text-align: center;
   }
-  .champion-card h4 { color: #92400e; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .champion-card h4 { color: #92400e; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
   .champion-name { font-size: 1.15rem; font-weight: 900; color: #78350f; margin-top: 4px; }
 
-  table.data-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
   table.data-table th, table.data-table td { border: 1px solid var(--border); padding: 7px 9px; text-align: left; }
-  table.data-table th { background: #f1f5f9; color: #334155; font-weight: 800; font-size: 0.78rem; }
+  table.data-table th { background: #f1f5f9; color: #334155; font-weight: 800; font-size: 0.77rem; }
   table.data-table tr:nth-child(even) td { background: #fafbfc; }
-  input.sc-input { width: 44px; padding: 3px 4px; text-align: center; font-weight: 800; border: 1px solid var(--border); border-radius: 4px; font-size: 0.82rem; }
-  select.dec-select { padding: 3px 6px; border-radius: 4px; border: 1px solid var(--danger); background: #fff5f5; font-weight: 700; font-size: 0.78rem; color: #991b1b; }
-  .badge-decision { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 800; }
-  .badge-ok { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; }
+  input.sc-input { width: 42px; padding: 3px 4px; text-align: center; font-weight: 800; border: 1px solid var(--border); border-radius: 4px; font-size: 0.82rem; }
+  select.dec-select { padding: 3px 6px; border-radius: 4px; border: 1px solid var(--danger); background: #fff5f5; font-weight: 700; font-size: 0.76rem; color: #991b1b; }
+  .badge-decision { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; padding: 2px 6px; border-radius: 4px; font-size: 0.71rem; font-weight: 800; }
+  .badge-ok { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 0.71rem; font-weight: 700; }
 
-  .poules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .poules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(390px, 1fr)); gap: 14px; margin-bottom: 16px; }
   .poule-box { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: #ffffff; }
-  .poule-title { font-weight: 800; color: var(--primary); font-size: 0.95rem; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .poule-title { font-weight: 800; color: var(--primary); font-size: 0.95rem; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; }
 
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
-  .modal-box { background: white; border-radius: 8px; padding: 20px; width: 92%; max-width: 380px; }
+  /* Modals */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 14px; }
+  .modal-box { background: white; border-radius: 10px; padding: 20px; width: 100%; max-width: 440px; max-height: 92vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+
+  /* OFFICIAL PDF PRINT SHEET OVERLAY */
+  #pdfPrintView {
+    display: none;
+    background: white;
+    padding: 24px 30px;
+    max-width: 1120px;
+    margin: 0 auto;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+  }
+  .pdf-banner {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 3px solid var(--primary); padding-bottom: 12px; margin-bottom: 18px;
+  }
+  .pdf-banner h2 { font-size: 1.5rem; color: var(--primary); font-weight: 900; }
+  .pdf-banner .pdf-meta-right { text-align: right; font-size: 0.85rem; color: #334155; font-weight: 700; }
+
+  /* Print Bracket Styling (mirrors official KTO PDF sheet cleanly) */
+  .pdf-bracket-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 22px;
+  }
+  .pdf-col-header {
+    background: var(--primary); color: white; padding: 6px 10px; border-radius: 5px;
+    font-weight: 800; font-size: 0.82rem; text-align: center; margin-bottom: 10px;
+  }
+  .pdf-col-header span { display: block; font-size: 0.72rem; font-weight: 500; color: #bbf7d0; margin-top: 2px; }
+  .pdf-slot-card {
+    border: 1.5px solid #334155; border-radius: 5px; margin-bottom: 10px; background: #fff;
+    overflow: hidden;
+  }
+  .pdf-slot-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 8px; font-size: 0.82rem; font-weight: 700; min-height: 28px;
+  }
+  .pdf-slot-row:first-child { border-bottom: 1px solid #cbd5e1; }
+  .pdf-slot-nr {
+    display: inline-block; width: 22px; font-weight: 800; color: var(--primary);
+  }
+  .pdf-ref-table {
+    width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.82rem;
+  }
+  .pdf-ref-table th {
+    background: #f1f5f9; color: var(--primary); font-weight: 800; border: 1px solid #94a3b8; padding: 6px 10px; text-align: left;
+  }
+  .pdf-ref-table td {
+    border: 1px solid #94a3b8; padding: 6px 10px; font-weight: 600;
+  }
+  .pdf-rules-box {
+    margin-top: 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;
+    padding: 10px 14px; font-size: 0.78rem; color: #334155;
+  }
 
   @media print {
-    .no-print { display: none !important; }
-    body { background: white; padding: 0; }
-    .card { border: none; box-shadow: none; padding: 4px; }
+    body { background: white !important; padding: 0 !important; }
+    .no-print, header, .nav-tabs, #mainContent { display: none !important; }
+    #pdfPrintView { display: block !important; border: none !important; padding: 0 !important; max-width: 100% !important; }
   }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <header>
+  <header class="no-print">
     <div>
-      <h1>🏆 KTO Cup 2026 – Live Toernooischema</h1>
-      <p>Klootschietersbond Twente Oost &bull; Finale op zondag 21 juni 2026</p>
+      <h1>
+        🏆 KTO Cup – Live Toernooischema
+        <span class="season-bar">
+          <span style="font-size:0.75rem; font-weight:700;">Seizoen:</span>
+          <select id="seasonSelect" class="season-select" onchange="switchSeason(this.value)"></select>
+          <button class="btn btn-sm" id="btnNewSeason" style="display:none; padding:2px 7px; font-size:0.72rem;" onclick="openNewSeasonModal()">+ Nieuw Seizoen</button>
+        </span>
+      </h1>
+      <p>Klootschietersbond Twente Oost &bull; Loting, Poules, Knock-out &amp; Scheidsrechters</p>
     </div>
-    <div class="header-actions no-print">
-      <span id="saveStatus" style="font-size:0.76rem; color:#bbf7d0; font-weight:700;">Live verbonden</span>
+    <div class="header-actions">
+      <span id="saveStatus" style="font-size:0.75rem; color:#bbf7d0; font-weight:700;">Verbinden...</span>
       <span class="auth-pill" id="authStatusBadge">Alleen-lezen (Bezoeker)</span>
       <button class="btn btn-sm" id="btnLoginToggle" onclick="handleAuthToggle()">Inloggen Wedstrijdleiding</button>
+      <button class="btn btn-sm" id="btnManageClubs" style="display:none;" onclick="openClubsModal()">🏢 Verenigingen</button>
+      <button class="btn btn-sm btn-accent" onclick="openPdfGenerator()">📄 Ronde PDF / Print</button>
       <button class="btn btn-sm" onclick="exportToExcel()">📥 Excel</button>
-      <button class="btn btn-sm" onclick="window.print()">🖨️ Print</button>
-      <button class="btn btn-sm" id="btnResetAdmin" style="display:none; color:#dc2626;" onclick="resetTournamentData()">↺ Reset</button>
     </div>
   </header>
 
   <div class="nav-tabs no-print">
-    <button class="tab-btn active" id="tab-senioren" onclick="switchTab('senioren')">🏆 Senioren</button>
-    <button class="tab-btn" id="tab-veteranen" onclick="switchTab('veteranen')">🥇 Veteranen</button>
-    <button class="tab-btn" id="tab-jeugd-cup" onclick="switchTab('jeugd-cup')">⚡ Jeugd Cup Klasse</button>
-    <button class="tab-btn" id="tab-jeugd-a" onclick="switchTab('jeugd-a')">🎯 Jeugd A Klasse</button>
-    <button class="tab-btn" id="tab-jeugd-b" onclick="switchTab('jeugd-b')">🌱 Jeugd B Klasse</button>
-    <button class="tab-btn" id="tab-scheids" onclick="switchTab('scheids')">📣 Scheidsrechters</button>
+    <div class="tabs-left">
+      <button class="tab-btn active" id="tab-senioren" onclick="switchTab('senioren')">🏆 Senioren</button>
+      <button class="tab-btn" id="tab-veteranen" onclick="switchTab('veteranen')">🥇 Veteranen</button>
+      <button class="tab-btn" id="tab-jeugd-cup" onclick="switchTab('jeugd-cup')">⚡ Jeugd Cup Klasse</button>
+      <button class="tab-btn" id="tab-jeugd-a" onclick="switchTab('jeugd-a')">🎯 Jeugd A Klasse</button>
+      <button class="tab-btn" id="tab-jeugd-b" onclick="switchTab('jeugd-b')">🌱 Jeugd B Klasse</button>
+      <button class="tab-btn" id="tab-scheids" onclick="switchTab('scheids')">📣 Scheidsrechters</button>
+    </div>
+    <div class="tabs-right">
+      <button class="btn btn-sm" id="btnClearSeason" style="display:none; color:#dc2626;" onclick="clearCurrentSeasonData()">🧹 Loting &amp; Uitslagen leegmaken</button>
+    </div>
   </div>
 
+  <!-- MAIN INTERACTIVE APP VIEW -->
   <div id="mainContent"></div>
+
+  <!-- OFFICIAL ROUND PDF / PRINT VIEW -->
+  <div id="pdfPrintView"></div>
 </div>
 
-<!-- LOGIN MODAL -->
+<!-- MODAL: INLOGGEN -->
 <div class="modal-overlay" id="loginModal">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:380px;">
     <h3 style="color:var(--primary); margin-bottom:6px;">🔐 Wedstrijdleiding Inloggen</h3>
-    <p style="font-size:0.78rem; color:#64748b; margin-bottom:12px;">Alleen de wedstrijdleiding kan uitslagen invoeren en aanpassen.</p>
+    <p style="font-size:0.78rem; color:#64748b; margin-bottom:12px;">Log in om de loting in te vullen, speeldata te wijzigen en uitslagen bij te houden.</p>
     <div style="margin-bottom:8px;">
       <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:2px;">E-mailadres:</label>
       <input type="email" id="loginEmail" style="width:100%; padding:6px; border:1px solid var(--border); border-radius:4px;">
@@ -184,96 +301,226 @@
   </div>
 </div>
 
+<!-- MODAL: NIEUW SEIZOEN AANMAKEN -->
+<div class="modal-overlay" id="newSeasonModal">
+  <div class="modal-box" style="max-width:380px;">
+    <h3 style="color:var(--primary); margin-bottom:6px;">📅 Nieuw Seizoen Aanmaken</h3>
+    <p style="font-size:0.78rem; color:#64748b; margin-bottom:12px;">Maak een nieuw leeg toernooischema aan (bijv. <strong>2027/2028</strong>). Eerdere seizoenen blijven bewaard in het archief.</p>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:3px;">Naam van het seizoen:</label>
+      <input type="text" id="newSeasonNameInput" placeholder="bijv. 2027/2028" style="width:100%; padding:7px; border:1px solid var(--border); border-radius:5px; font-weight:bold;">
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:6px;">
+      <button class="btn btn-sm" onclick="document.getElementById('newSeasonModal').style.display='none'">Annuleren</button>
+      <button class="btn btn-primary btn-sm" onclick="createNewSeason()">✓ Aanmaken &amp; Openen</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VERENIGINGEN BEHEREN -->
+<div class="modal-overlay" id="clubsModal">
+  <div class="modal-box" style="max-width:460px;">
+    <h3 style="color:var(--primary); margin-bottom:6px;">🏢 KTO Verenigingen &amp; Combinatieteams</h3>
+    <p style="font-size:0.78rem; color:#64748b; margin-bottom:10px;">Deze lijst wordt gebruikt in alle dropdownmenu's voor de loting en scheidsrechters.</p>
+    <div style="display:flex; gap:6px; margin-bottom:10px;">
+      <input type="text" id="newClubInput" placeholder="Nieuwe vereniging of combi (bijv. Java & Kolkersveld)" style="flex:1; padding:6px; border:1px solid var(--border); border-radius:4px;" onkeydown="if(event.key==='Enter') addNewClub()">
+      <button class="btn btn-primary btn-sm" onclick="addNewClub()">+ Toevoegen</button>
+    </div>
+    <div id="clubsListContainer" style="max-height:260px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:6px; padding:6px; background:#f8fafc;"></div>
+    <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+      <button class="btn btn-sm" onclick="document.getElementById('clubsModal').style.display='none'">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RONDE PDF / PRINT GENERATOR -->
+<div class="modal-overlay" id="pdfSelectModal">
+  <div class="modal-box" style="max-width:440px;">
+    <h3 style="color:var(--primary); margin-bottom:6px;">📄 Officiële Ronde PDF / Print Samenstellen</h3>
+    <p style="font-size:0.78rem; color:#64748b; margin-bottom:12px;">Kies welke categorie en ronde je wilt afdrukken of opslaan als PDF voor de verenigingen:</p>
+
+    <div style="margin-bottom:10px;">
+      <label style="font-size:0.76rem; font-weight:bold; display:block; margin-bottom:3px;">Categorie / Klasse:</label>
+      <select id="pdfCatSelect" style="width:100%; padding:7px; border:1px solid var(--border); border-radius:5px; font-weight:bold;">
+        <option value="senioren">🏆 Senioren (Knock-out)</option>
+        <option value="veteranen">🥇 Veteranen (Poules + Knock-out)</option>
+        <option value="jeugdCup">⚡ Jeugd Cup Klasse</option>
+        <option value="jeugdA">🎯 Jeugd A Klasse</option>
+        <option value="jeugdB">🌱 Jeugd B Klasse</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-size:0.76rem; font-weight:bold; display:block; margin-bottom:3px;">Welke ronde / weergave?</label>
+      <select id="pdfRoundSelect" style="width:100%; padding:7px; border:1px solid var(--border); border-radius:5px; font-weight:bold;">
+        <option value="all">Volledig Toernooischema (Alle rondes + Scheidsrechters)</option>
+        <option value="Ronde 1">Alleen Loting / Ronde 1 (Poules / 1e ronde)</option>
+        <option value="Kwartfinale">T/m Kwartfinales</option>
+        <option value="Halve Finale">T/m Halve Finales</option>
+        <option value="Finale">Finaledag Schema</option>
+      </select>
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <button class="btn btn-sm" onclick="document.getElementById('pdfSelectModal').style.display='none'">Annuleren</button>
+      <button class="btn btn-accent btn-sm" onclick="generateAndPrintPdf()">🖨️ Open Print / PDF Voorbeeld</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = "https://ovqjojgztbbyrkgrfzxc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_RnRgJJAyxebE1nYhDUsIRQ_sG9FgtzT";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const INITIAL_DATA = {
-  senioren: {
-    dates: { r1: "16-4 / 23-4 / 30-4", qf: "7-5 / 21-5 / 28-5", sf: "4-6 / 11-6 / 18-6", final: "Zondag 21 juni 2026" },
-    matches: [
-      { id: "s_1", round: "Ronde 1", code: "1a/1b", home: "Steeds Vooruit", away: "Beuningen", sc1H: 0, sc1A: 1, sc2H: 1, sc2A: 0, decWinner: "", ref: "Noord Berghuizen" },
-      { id: "s_2", round: "Ronde 1", code: "1c/1d", home: "Ons Streven", away: "Mander", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Java & Kolkersveld" },
-      { id: "s_3", round: "Ronde 1", code: "1e/1f", home: "Nooit Gedacht", away: "Vooruitzicht", sc1H: 0, sc1A: 1, sc2H: 1, sc2A: 0, decWinner: "", ref: "Oud Ootmarsum" },
-      { id: "s_4", round: "Ronde 1", code: "1g/1h", home: "De Toekomst", away: "Lemselo", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Vooruit Losser" },
-      { id: "s_qf1", round: "Kwartfinale", code: "2a/2b", fromHome: "s_1", fromAway: "s_2", sc1H: 0, sc1A: 1, sc2H: 0, sc2A: 1, decWinner: "Beuningen", ref: "Nooit Gedacht" },
-      { id: "s_qf2", round: "Kwartfinale", code: "2c/2d", fromHome: "s_3", fromAway: "s_4", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Lemselo" },
-      { id: "s_qf3", round: "Kwartfinale", code: "2e/2f", home: "Noord Berghuizen", away: "Java & Kolkersveld", sc1H: 1, sc1A: 0, sc2H: 1, sc2A: 0, decWinner: "Java & Kolkersveld", ref: "Steeds Vooruit" },
-      { id: "s_qf4", round: "Kwartfinale", code: "2g/2h", home: "Oud Ootmarsum", away: "Vooruit Losser", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "Mander" },
-      { id: "s_sf1", round: "Halve Finale", code: "3a/3b", fromHome: "s_qf1", fromAway: "s_qf2", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "De Toekomst" },
-      { id: "s_sf2", round: "Halve Finale", code: "3c/3d", fromHome: "s_qf3", fromAway: "s_qf4", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "Ons Streven" },
-      { id: "s_fin", round: "Finale", code: "FINALE", fromHome: "s_sf1", fromAway: "s_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "KTO Bestuur" }
-    ]
-  },
-  veteranen: {
-    dates: { r1: "15-4 / 22-4 / 29-4 / 6-5", qf: "13-5 / 20-5 / 27-5", sf: "3-6 / 10-6 / 17-6", final: "Zondag 21 juni 2026" },
-    poules: [
-      { name: "Poule A", ref: "Ons Streven", teams: ["Lemselo", "Oud Ootmarsum", "Lattrop Breklenkamp"], games: [{ label: "Wedstrijd 1", p1: 1, p2: 2, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 2, p3: 1 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 2 }], decWinner: "" },
-      { name: "Poule B", ref: "Nooit Gedacht", teams: ["Ons Streven", "Vooruitzicht", "Steeds Vooruit & Ons Genoegen"], games: [{ label: "Wedstrijd 1", p1: 0, p2: 1, p3: 2 }, { label: "Wedstrijd 2", p1: 0, p2: 2, p3: 1 }, { label: "Wedstrijd 3", p1: 0, p2: 1, p3: 2 }], decWinner: "" },
-      { name: "Poule C", ref: "De Toekomst", teams: ["Nooit Gedacht", "Mander", "Noord Berghuizen"], games: [{ label: "Wedstrijd 1", p1: 0, p2: 2, p3: 1 }, { label: "Wedstrijd 2", p1: 0, p2: 2, p3: 1 }, { label: "Wedstrijd 3", p1: 0, p2: 2, p3: 1 }], decWinner: "" },
-      { name: "Poule D", ref: "Lemselo", teams: ["De Toekomst", "Beuningen"], games: [{ label: "Wedstrijd 1", p1: 2, p2: 1, p3: 0 }, { label: "Wedstrijd 2", p1: 2, p2: 1, p3: 0 }], decWinner: "" }
-    ],
-    knockout: [
-      { id: "v_qf1", round: "Kwartfinale", label: "Kwartfinale 1 (1e A - 2e B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Mander" },
-      { id: "v_qf2", round: "Kwartfinale", label: "Kwartfinale 2 (1e C - 2e D)", homeRef: "Poule C:1", awayRef: "Poule D:2", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Lattrop Breklenkamp" },
-      { id: "v_qf3", round: "Kwartfinale", label: "Kwartfinale 3 (1e B - 2e A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 1, sc2H: 1, sc2A: 0, decWinner: "", ref: "Beuningen" },
-      { id: "v_qf4", round: "Kwartfinale", label: "Kwartfinale 4 (1e D - 2e C)", homeRef: "Poule D:1", awayRef: "Poule C:2", sc1H: 1, sc1A: 0, sc2H: 0, sc2A: 1, decWinner: "", ref: "Steeds Vooruit & Ons Genoegen" },
-      { id: "v_sf1", round: "Halve Finale", label: "Halve Finale 1", fromHome: "v_qf1", fromAway: "v_qf2", sc1H: 0, sc1A: 1, sc2H: 0, sc2A: 0, decWinner: "", ref: "Vooruitzicht" },
-      { id: "v_sf2", round: "Halve Finale", label: "Halve Finale 2", fromHome: "v_qf3", fromAway: "v_qf4", sc1H: 0, sc1A: 1, sc2H: 0, sc2A: 0, decWinner: "", ref: "Noord Berghuizen" },
-      { id: "v_fin", round: "Finale", label: "FINALE", fromHome: "v_sf1", fromAway: "v_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "KTO Bestuur" }
-    ]
-  },
-  jeugdCup: {
-    title: "Jeugd Cup Klasse",
-    dates: { r1: "13-4 / 20-4 / 4-5 / 11-5", sf: "18-5 / 1-6 / 8-6", final: "Zondag 21 juni 2026" },
-    poules: [
-      { name: "Poule A", teams: ["Lattrop Breklenkamp", "Steeds Vooruit", "Nooit Gedacht"], games: [{ label: "Wedstrijd 1", p1: 0, p2: 1, p3: 2 }, { label: "Wedstrijd 2", p1: 0, p2: 1, p3: 2 }, { label: "Wedstrijd 3", p1: 0, p2: 1, p3: 2 }], decWinner: "" },
-      { name: "Poule B", teams: ["Reutum", "Ons Streven", "Beuningen"], games: [{ label: "Wedstrijd 1", p1: 0, p2: 1, p3: 2 }, { label: "Wedstrijd 2", p1: 0, p2: 1, p3: 2 }, { label: "Wedstrijd 3", p1: 0, p2: 1, p3: 2 }], decWinner: "" }
-    ],
-    knockout: [
-      { id: "jc_sf1", round: "Halve Finale", label: "Halve Finale 1 (1e A - 2e B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "" },
-      { id: "jc_sf2", round: "Halve Finale", label: "Halve Finale 2 (1e B - 2e A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "" },
-      { id: "jc_56", round: "5e / 6e Plek", label: "5de en 6de plek (3e A - 3e B)", homeRef: "Poule A:3", awayRef: "Poule B:3", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "" },
-      { id: "jc_fin", round: "Finale", label: "FINALE", fromHome: "jc_sf1", fromAway: "jc_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "" }
-    ]
-  },
-  jeugdA: {
-    title: "Jeugd A Klasse",
-    dates: { r1: "13-4 / 20-4 / 4-5 / 11-5", sf: "18-5 / 1-6 / 8-6", final: "Zondag 21 juni 2026" },
-    poules: [
-      { name: "Poule A", teams: ["Mander", "Beuningen"], games: [{ label: "Wedstrijd 1", p1: 1, p2: 2, p3: 0 }, { label: "Wedstrijd 2", p1: 1, p2: 2, p3: 0 }], decWinner: "" },
-      { name: "Poule B", teams: ["NB & De Toekomst", "Java", "Nooit Gedacht"], games: [{ label: "Wedstrijd 1", p1: 1, p2: 2, p3: 0 }, { label: "Wedstrijd 2", p1: 1, p2: 2, p3: 0 }, { label: "Wedstrijd 3", p1: 1, p2: 2, p3: 0 }], decWinner: "" }
-    ],
-    knockout: [
-      { id: "ja_sf1", round: "Halve Finale", label: "Halve Finale 1 (1e A - 2e B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "" },
-      { id: "ja_sf2", round: "Halve Finale", label: "Halve Finale 2 (1e B - 2e A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "" },
-      { id: "ja_56", round: "5e / 6e Plek", label: "5de en 6de plek (3e A - 3e B)", homeRef: "Poule A:3", awayRef: "Poule B:3", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "" },
-      { id: "ja_fin", round: "Finale", label: "FINALE", fromHome: "ja_sf1", fromAway: "ja_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "" }
-    ]
-  },
-  jeugdB: {
-    title: "Jeugd B Klasse",
-    dates: { r1: "4-5 / 18-5", final: "Zondag 21 juni 2026" },
-    poules: [
-      { name: "Poule A", teams: ["KV Mander", "Java", "Oud Ootmarsum"], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }], decWinner: "" }
-    ],
-    knockout: [
-      { id: "jb_fin", round: "Finale", label: "FINALE (1e Poule A - 2e Poule A)", homeRef: "Poule A:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "" }
-    ]
-  }
-};
+const DEFAULT_CLUBS = [
+  "Beuningen",
+  "De Toekomst",
+  "Java",
+  "Java & Kolkersveld",
+  "KV Mander",
+  "Lattrop Breklenkamp",
+  "Lemselo",
+  "Mander",
+  "NB & De Toekomst",
+  "Nooit Gedacht",
+  "Noord Berghuizen",
+  "Ons Streven",
+  "Oud Ootmarsum",
+  "Reutum",
+  "Steeds Vooruit",
+  "Steeds Vooruit & Ons Genoegen",
+  "Vooruit Losser",
+  "Vooruitzicht"
+];
 
-let appData = JSON.parse(JSON.stringify(INITIAL_DATA));
+// Lege sjabloon-generator voor een nieuw seizoen (bijv. 2026/2027)
+function createEmptySeasonTemplate(seasonLabel) {
+  return {
+    season: seasonLabel,
+    clubs: [...DEFAULT_CLUBS],
+    senioren: {
+      dates: {
+        r1: "15-4 / 22-4 / 29-4",
+        qf: "6-5 / 20-5 / 27-5",
+        sf: "3-6 / 10-6 / 17-6",
+        final: "Zondag 20 juni 2027"
+      },
+      // 12 lotingsvakjes (1 t/m 8 spelen Ronde 1; 9 t/m 12 zijn vrijgeloot voor Kwartfinale)
+      slots: {
+        1: "", 2: "", 3: "", 4: "", 5: "", 6: "", 7: "", 8: "",
+        9: "", 10: "", 11: "", 12: ""
+      },
+      matches: [
+        { id: "s_1", round: "Ronde 1", code: "1 tegen 2", slotHome: 1, slotAway: 2, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "s_2", round: "Ronde 1", code: "3 tegen 4", slotHome: 3, slotAway: 4, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "s_3", round: "Ronde 1", code: "5 tegen 6", slotHome: 5, slotAway: 6, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "s_4", round: "Ronde 1", code: "7 tegen 8", slotHome: 7, slotAway: 8, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+
+        { id: "s_qf1", round: "Kwartfinale", code: "Kwartfinale 1", fromHome: "s_1", fromAway: "s_2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "s_qf2", round: "Kwartfinale", code: "Kwartfinale 2", fromHome: "s_3", fromAway: "s_4", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "s_qf3", round: "Kwartfinale", code: "Kwartfinale 3", slotHome: 9, slotAway: 10, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "s_qf4", round: "Kwartfinale", code: "Kwartfinale 4", slotHome: 11, slotAway: 12, sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+
+        { id: "s_sf1", round: "Halve Finale", code: "Halve finale 1", fromHome: "s_qf1", fromAway: "s_qf2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "s_sf2", round: "Halve Finale", code: "Halve finale 2", fromHome: "s_qf3", fromAway: "s_qf4", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+
+        { id: "s_fin", round: "Finale", code: "FINALE", fromHome: "s_sf1", fromAway: "s_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" }
+      ]
+    },
+    veteranen: {
+      title: "Veteranen",
+      dates: {
+        r1: "14-4 / 21-4 / 28-4 / 5-5",
+        qf: "12-5 / 19-5 / 26-5",
+        sf: "2-6 / 9-6 / 16-6",
+        final: "Zondag 20 juni 2027"
+      },
+      poules: [
+        { name: "Poule A", slotNrs: [1, 2, 3], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" },
+        { name: "Poule B", slotNrs: [4, 5, 6], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" },
+        { name: "Poule C", slotNrs: [7, 8, 9], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" },
+        { name: "Poule D", slotNrs: [10, 11], teams: ["", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" }
+      ],
+      knockout: [
+        { id: "v_qf1", round: "Kwartfinale", label: "Kwartfinale 1 (1e Poule A - 2e Poule B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "v_qf2", round: "Kwartfinale", label: "Kwartfinale 2 (1e Poule C - 2e Poule D)", homeRef: "Poule C:1", awayRef: "Poule D:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "v_qf3", round: "Kwartfinale", label: "Kwartfinale 3 (1e Poule B - 2e Poule A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "v_qf4", round: "Kwartfinale", label: "Kwartfinale 4 (1e Poule D - 2e Poule C)", homeRef: "Poule D:1", awayRef: "Poule C:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "v_sf1", round: "Halve Finale", label: "Halve Finale 1", fromHome: "v_qf1", fromAway: "v_qf2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "v_sf2", round: "Halve Finale", label: "Halve Finale 2", fromHome: "v_qf3", fromAway: "v_qf4", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "v_fin", round: "Finale", label: "FINALE", fromHome: "v_sf1", fromAway: "v_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" }
+      ]
+    },
+    jeugdCup: {
+      title: "Jeugd Cup Klasse",
+      dates: { r1: "12-4 / 19-4 / 3-5 / 10-5", sf: "17-5 / 31-5 / 7-6", final: "Zondag 20 juni 2027" },
+      poules: [
+        { name: "Poule A", slotNrs: [1, 2, 3], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" },
+        { name: "Poule B", slotNrs: [4, 5, 6], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" }
+      ],
+      knockout: [
+        { id: "jc_sf1", round: "Halve Finale", label: "Halve Finale 1 (1e Poule A - 2e Poule B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "jc_sf2", round: "Halve Finale", label: "Halve Finale 2 (1e Poule B - 2e Poule A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "jc_56", round: "5e / 6e Plek", label: "5de en 6de plek (3e Poule A - 3e Poule B)", homeRef: "Poule A:3", awayRef: "Poule B:3", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" },
+        { id: "jc_fin", round: "Finale", label: "FINALE", fromHome: "jc_sf1", fromAway: "jc_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" }
+      ]
+    },
+    jeugdA: {
+      title: "Jeugd A Klasse",
+      dates: { r1: "12-4 / 19-4 / 3-5 / 10-5", sf: "17-5 / 31-5 / 7-6", final: "Zondag 20 juni 2027" },
+      poules: [
+        { name: "Poule A", slotNrs: [1, 2, 3], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" },
+        { name: "Poule B", slotNrs: [4, 5, 6], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" }
+      ],
+      knockout: [
+        { id: "ja_sf1", round: "Halve Finale", label: "Halve Finale 1 (1e Poule A - 2e Poule B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "ja_sf2", round: "Halve Finale", label: "Halve Finale 2 (1e Poule B - 2e Poule A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
+        { id: "ja_56", round: "5e / 6e Plek", label: "5de en 6de plek (3e Poule A - 3e Poule B)", homeRef: "Poule A:3", awayRef: "Poule B:3", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" },
+        { id: "ja_fin", round: "Finale", label: "FINALE", fromHome: "ja_sf1", fromAway: "ja_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" }
+      ]
+    },
+    jeugdB: {
+      title: "Jeugd B Klasse",
+      dates: { r1: "3-5 / 17-5", final: "Zondag 20 juni 2027" },
+      poules: [
+        { name: "Poule A", slotNrs: [1, 2, 3], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" }
+      ],
+      knockout: [
+        { id: "jb_fin", round: "Finale", label: "FINALE (1e Poule A - 2e Poule A)", homeRef: "Poule A:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" }
+      ]
+    }
+  };
+}
+
+let seasonsList = ["2026/2027"];
+let activeSeason = "2026/2027";
+let appData = createEmptySeasonTemplate("2026/2027");
 let currentTab = "senioren";
 let currentUser = null;
+
+function seasonDbKey(sLabel) {
+  return "season_" + sLabel.replace(/[^a-zA-Z0-9]/g, "_");
+}
+
+function buildClubOptions(selectedVal, placeholder = "-- Kies vereniging --") {
+  const clubs = (appData.clubs && appData.clubs.length > 0) ? appData.clubs : DEFAULT_CLUBS;
+  let html = `<option value="">${placeholder}</option>`;
+  clubs.forEach(c => {
+    html += `<option value="${c}" ${selectedVal === c ? "selected" : ""}>${c}</option>`;
+  });
+  if (selectedVal && !clubs.includes(selectedVal)) {
+    html += `<option value="${selectedVal}" selected>${selectedVal}</option>`;
+  }
+  return html;
+}
 
 async function initApp() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   currentUser = session ? session.user : null;
   updateAuthUI();
 
-  await loadFromSupabase();
+  await loadSeasonsAndData();
 
   supabaseClient.auth.onAuthStateChange((_event, session) => {
     currentUser = session ? session.user : null;
@@ -285,20 +532,26 @@ async function initApp() {
 function updateAuthUI() {
   const badge = document.getElementById("authStatusBadge");
   const btn = document.getElementById("btnLoginToggle");
-  const resetBtn = document.getElementById("btnResetAdmin");
+  const btnNewS = document.getElementById("btnNewSeason");
+  const btnClubs = document.getElementById("btnManageClubs");
+  const btnClear = document.getElementById("btnClearSeason");
 
   if (currentUser) {
     badge.innerText = "👑 Wedstrijdleiding (" + currentUser.email + ")";
     badge.style.background = "#fef08a";
     badge.style.color = "#854d0e";
     btn.innerText = "Uitloggen";
-    resetBtn.style.display = "inline-flex";
+    btnNewS.style.display = "inline-flex";
+    btnClubs.style.display = "inline-flex";
+    btnClear.style.display = "inline-flex";
   } else {
     badge.innerText = "Alleen-lezen (Bezoeker)";
     badge.style.background = "rgba(255,255,255,0.16)";
     badge.style.color = "white";
     btn.innerText = "Inloggen Wedstrijdleiding";
-    resetBtn.style.display = "none";
+    btnNewS.style.display = "none";
+    btnClubs.style.display = "none";
+    btnClear.style.display = "none";
   }
 }
 
@@ -326,30 +579,108 @@ async function submitLogin() {
     document.getElementById("loginModal").style.display = "none";
     currentUser = data.user;
     updateAuthUI();
-    renderCurrentTab();
+    await loadSeasonsAndData();
   }
 }
 
-async function loadFromSupabase() {
+async function loadSeasonsAndData() {
   const st = document.getElementById("saveStatus");
   try {
-    const { data, error } = await supabaseClient
+    // 1. Laad seizoenenlijst
+    const { data: metaRow } = await supabaseClient
       .from("kto_cup_state")
       .select("data")
-      .eq("id", "cup_2026")
+      .eq("id", "seasons_meta")
       .maybeSingle();
 
-    if (data && data.data) {
-      appData = data.data;
-      if (st) st.innerText = "✓ Live data geladen";
-    } else if (currentUser) {
-      // Eerste keer vullen als de tabel nog leeg is
-      await saveState();
+    if (metaRow && metaRow.data && Array.isArray(metaRow.data.seasons) && metaRow.data.seasons.length > 0) {
+      seasonsList = metaRow.data.seasons;
+      if (!seasonsList.includes(activeSeason)) activeSeason = seasonsList[0];
+    } else {
+      seasonsList = ["2026/2027"];
+      activeSeason = "2026/2027";
+      if (currentUser) {
+        await supabaseClient.from("kto_cup_state").upsert({
+          id: "seasons_meta",
+          data: { seasons: seasonsList },
+          updated_at: new Date().toISOString()
+        });
+      }
+    }
+
+    renderSeasonDropdown();
+
+    // 2. Laad data van actief seizoen
+    const { data: sRow } = await supabaseClient
+      .from("kto_cup_state")
+      .select("data")
+      .eq("id", seasonDbKey(activeSeason))
+      .maybeSingle();
+
+    if (sRow && sRow.data) {
+      appData = sRow.data;
+      if (!appData.clubs) appData.clubs = [...DEFAULT_CLUBS];
+      if (st) st.innerText = "✓ Live (" + activeSeason + ")";
+    } else {
+      appData = createEmptySeasonTemplate(activeSeason);
+      if (currentUser) await saveState();
+      if (st) st.innerText = "✓ Nieuw seizoen (" + activeSeason + ")";
     }
   } catch (e) {
     console.error("Fout bij laden:", e);
   }
   renderCurrentTab();
+}
+
+function renderSeasonDropdown() {
+  const sel = document.getElementById("seasonSelect");
+  if (!sel) return;
+  sel.innerHTML = seasonsList.map(s => `<option value="${s}" ${s === activeSeason ? "selected" : ""}>${s}</option>`).join("");
+}
+
+async function switchSeason(newS) {
+  activeSeason = newS;
+  await loadSeasonsAndData();
+}
+
+function openNewSeasonModal() {
+  document.getElementById("newSeasonNameInput").value = "";
+  document.getElementById("newSeasonModal").style.display = "flex";
+  setTimeout(() => document.getElementById("newSeasonNameInput").focus(), 100);
+}
+
+async function createNewSeason() {
+  if (!currentUser) return;
+  const label = document.getElementById("newSeasonNameInput").value.trim();
+  if (!label) return alert("Vul een seizoensnaam in (bijv. 2027/2028).");
+
+  if (!seasonsList.includes(label)) {
+    seasonsList.unshift(label);
+    await supabaseClient.from("kto_cup_state").upsert({
+      id: "seasons_meta",
+      data: { seasons: seasonsList },
+      updated_at: new Date().toISOString()
+    });
+  }
+
+  activeSeason = label;
+  appData = createEmptySeasonTemplate(label);
+  await saveState();
+
+  document.getElementById("newSeasonModal").style.display = "none";
+  renderSeasonDropdown();
+  renderCurrentTab();
+}
+
+async function clearCurrentSeasonData() {
+  if (!currentUser) return;
+  if (confirm(`Weet je zeker dat je alle lotingen, scheidsrechters en uitslagen van seizoen ${activeSeason} helemaal leeg wilt maken?`)) {
+    const keepClubs = appData.clubs ? [...appData.clubs] : [...DEFAULT_CLUBS];
+    appData = createEmptySeasonTemplate(activeSeason);
+    appData.clubs = keepClubs;
+    await saveState();
+    renderCurrentTab();
+  }
 }
 
 async function saveState() {
@@ -360,23 +691,61 @@ async function saveState() {
   try {
     const { error } = await supabaseClient
       .from("kto_cup_state")
-      .upsert({ id: "cup_2026", data: appData, updated_at: new Date().toISOString() });
+      .upsert({
+        id: seasonDbKey(activeSeason),
+        data: appData,
+        updated_at: new Date().toISOString()
+      });
 
     if (error) {
       alert("Opslaan mislukt: " + error.message);
     } else if (st) {
-      st.innerText = "✓ Live opgeslagen (" + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ")";
+      st.innerText = "✓ Opgeslagen (" + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ")";
     }
   } catch (e) {
     console.error(e);
   }
 }
 
-async function resetTournamentData() {
+// VERENIGINGEN BEHEER
+function openClubsModal() {
+  renderClubsModalList();
+  document.getElementById("clubsModal").style.display = "flex";
+}
+
+function renderClubsModalList() {
+  const clubs = (appData.clubs || DEFAULT_CLUBS).sort();
+  const container = document.getElementById("clubsListContainer");
+  container.innerHTML = clubs.map((c, idx) => `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; border-bottom:1px solid #e2e8f0; background:white;">
+      <span style="font-weight:700; font-size:0.82rem;">${c}</span>
+      <button class="btn btn-sm" style="color:#dc2626; padding:1px 6px;" onclick="removeClub('${c.replace(/'/g, "\'")}')">&times;</button>
+    </div>
+  `).join("");
+}
+
+async function addNewClub() {
   if (!currentUser) return;
-  if (confirm("Wil je alle uitslagen terugzetten naar het oorspronkelijke Excel-bestand?")) {
-    appData = JSON.parse(JSON.stringify(INITIAL_DATA));
+  const inp = document.getElementById("newClubInput");
+  const name = inp.value.trim();
+  if (!name) return;
+  if (!appData.clubs) appData.clubs = [...DEFAULT_CLUBS];
+  if (!appData.clubs.includes(name)) {
+    appData.clubs.push(name);
+    appData.clubs.sort();
     await saveState();
+    renderClubsModalList();
+    renderCurrentTab();
+  }
+  inp.value = "";
+}
+
+async function removeClub(name) {
+  if (!currentUser) return;
+  if (confirm(`Vereniging "${name}" verwijderen uit de keuzelijst?`)) {
+    appData.clubs = (appData.clubs || DEFAULT_CLUBS).filter(c => c !== name);
+    await saveState();
+    renderClubsModalList();
     renderCurrentTab();
   }
 }
@@ -388,9 +757,13 @@ function switchTab(tab) {
   renderCurrentTab();
 }
 
+// MATCH EVALUATIE
 function evaluateMatch(m, homeName, awayName) {
-  if (!homeName || !awayName || homeName === "Nog onbekend" || awayName === "Nog onbekend" || homeName === "-") {
-    return { home: homeName || "Nog onbekend", away: awayName || "Nog onbekend", winner: null, needsDecision: false, ptsH: 0, ptsA: 0 };
+  const hDisplay = homeName || "Nog in te vullen";
+  const aDisplay = awayName || "Nog in te vullen";
+
+  if (!homeName || !awayName || homeName.startsWith("Winnaar ") || awayName.startsWith("Winnaar ") || homeName === "-" || awayName === "-") {
+    return { home: hDisplay, away: aDisplay, winner: null, needsDecision: false, ptsH: 0, ptsA: 0 };
   }
 
   let ptsH = 0, ptsA = 0;
@@ -414,11 +787,18 @@ function evaluateMatch(m, homeName, awayName) {
     if (m.decWinner === homeName || m.decWinner === awayName) winner = m.decWinner;
   }
 
-  return { home: homeName, away: awayName, winner, needsDecision, ptsH, ptsA };
+  return { home: hDisplay, away: aDisplay, winner, needsDecision, ptsH, ptsA };
 }
 
+// POULE EVALUATIE
 function evaluatePoule(poule) {
+  const activeTeams = poule.teams.filter(t => t && t.trim() !== "");
+  if (activeTeams.length === 0) {
+    return { totals: [], first: "", second: "", third: "", needsDecision: false };
+  }
+
   const totals = poule.teams.map((t, idx) => {
+    if (!t || t.trim() === "") return null;
     let sum = 0;
     poule.games.forEach(g => {
       if (idx === 0) sum += Number(g.p1) || 0;
@@ -426,81 +806,125 @@ function evaluatePoule(poule) {
       if (idx === 2) sum += Number(g.p3) || 0;
     });
     return { team: t, pts: sum };
-  });
+  }).filter(Boolean);
 
   const sorted = [...totals].sort((a, b) => b.pts - a.pts);
   const maxPts = sorted.length > 0 ? sorted[0].pts : 0;
   const topTeams = sorted.filter(x => x.pts === maxPts);
-  const needsDecision = (maxPts > 0 && topTeams.length > 1) || (maxPts === 0 && poule.teams.length > 1);
+  const needsDecision = (maxPts > 0 && topTeams.length > 1);
 
-  let first = sorted[0] ? sorted[0].team : "-";
-  let second = sorted[1] ? sorted[1].team : "-";
-  let third = sorted[2] ? sorted[2].team : "-";
+  let first = sorted[0] ? sorted[0].team : "";
+  let second = sorted[1] ? sorted[1].team : "";
+  let third = sorted[2] ? sorted[2].team : "";
 
-  if (needsDecision && poule.decWinner && poule.teams.includes(poule.decWinner)) {
+  if (needsDecision && poule.decWinner && activeTeams.includes(poule.decWinner)) {
     first = poule.decWinner;
     const rest = sorted.filter(x => x.team !== first);
-    second = rest[0] ? rest[0].team : "-";
-    third = rest[1] ? rest[1].team : "-";
+    second = rest[0] ? rest[0].team : "";
+    third = rest[1] ? rest[1].team : "";
   }
 
   return { totals, first, second, third, needsDecision };
 }
 
-function renderSenioren() {
+function getSeniorenResolved() {
   const sen = appData.senioren;
   const resolved = {};
-  const isAdmin = !!currentUser;
-
   sen.matches.forEach(m => {
-    let hName = m.home, aName = m.away;
-    if (m.fromHome) hName = resolved[m.fromHome]?.winner || "Winnaar " + m.fromHome.toUpperCase();
-    if (m.fromAway) aName = resolved[m.fromAway]?.winner || "Winnaar " + m.fromAway.toUpperCase();
+    let hName = m.slotHome ? (sen.slots[m.slotHome] || "") : (resolved[m.fromHome]?.winner || `Winnaar ${m.fromHome.toUpperCase()}`);
+    let aName = m.slotAway ? (sen.slots[m.slotAway] || "") : (resolved[m.fromAway]?.winner || `Winnaar ${m.fromAway.toUpperCase()}`);
     resolved[m.id] = evaluateMatch(m, hName, aName);
   });
+  return resolved;
+}
 
+// ======================== RENDER SENIOREN ========================
+function renderSenioren() {
+  const sen = appData.senioren;
+  const resolved = getSeniorenResolved();
+  const isAdmin = !!currentUser;
   const champion = resolved["s_fin"]?.winner || "Nog te bepalen";
 
   let html = `
     <div class="card">
       <div class="card-header">
-        <div class="card-title">🏆 Senioren – Toernooiboom (Knock-out)</div>
-        <div class="dates-strip" style="margin:0;">
-          <span class="date-chip">Ronde 1: ${sen.dates.r1}</span>
-          <span class="date-chip">Kwartfinale: ${sen.dates.qf}</span>
-          <span class="date-chip">Halve Finale: ${sen.dates.sf}</span>
-          <span class="date-chip finale">Finale: ${sen.dates.final}</span>
-        </div>
+        <div class="card-title">🏆 Senioren (${activeSeason}) – Loting &amp; Toernooiboom</div>
+        ${!isAdmin ? `
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="date-chip">Ronde 1: ${sen.dates.r1}</span>
+            <span class="date-chip">Kwartfinale: ${sen.dates.qf}</span>
+            <span class="date-chip">Halve Finale: ${sen.dates.sf}</span>
+            <span class="date-chip finale">Finale: ${sen.dates.final}</span>
+          </div>
+        ` : ''}
       </div>
+
+      ${isAdmin ? `
+        <div class="dates-editor no-print">
+          <div class="date-field">
+            <label>📅 Speeldata Ronde 1:</label>
+            <input type="text" value="${sen.dates.r1}" onchange="updateSenDate('r1', this.value)">
+          </div>
+          <div class="date-field">
+            <label>📅 Speeldata Kwartfinale:</label>
+            <input type="text" value="${sen.dates.qf}" onchange="updateSenDate('qf', this.value)">
+          </div>
+          <div class="date-field">
+            <label>📅 Speeldata Halve Finale:</label>
+            <input type="text" value="${sen.dates.sf}" onchange="updateSenDate('sf', this.value)">
+          </div>
+          <div class="date-field">
+            <label>🏆 Datum Finaledag:</label>
+            <input type="text" value="${sen.dates.final}" onchange="updateSenDate('final', this.value)">
+          </div>
+        </div>
+      ` : ''}
 
       <div class="bracket-wrapper">
         <div class="bracket">
+          <!-- RONDE 1 + VRIJGELOTE TEAMS -->
           <div class="bracket-round">
-            <div class="round-title">Ronde 1</div>
-            ${renderBracketMatch(sen.matches[0], resolved["s_1"], "1 & 2")}
-            ${renderBracketMatch(sen.matches[1], resolved["s_2"], "3 & 4")}
-            ${renderBracketMatch(sen.matches[2], resolved["s_3"], "5 & 6")}
-            ${renderBracketMatch(sen.matches[3], resolved["s_4"], "7 & 8")}
-            <div class="match-box bye-box"><div class="match-meta"><span>Vrijgeloot</span></div><div class="team-line">9. Noord Berghuizen</div></div>
-            <div class="match-box bye-box"><div class="match-meta"><span>Vrijgeloot</span></div><div class="team-line">10. Java & Kolkersveld</div></div>
-            <div class="match-box bye-box"><div class="match-meta"><span>Vrijgeloot</span></div><div class="team-line">11. Oud Ootmarsum</div></div>
-            <div class="match-box bye-box"><div class="match-meta"><span>Vrijgeloot</span></div><div class="team-line">12. Vooruit Losser</div></div>
+            <div class="round-title">Loting &amp; Ronde 1 <span class="round-subdate">${sen.dates.r1}</span></div>
+            ${renderSeniorenBracketMatch(sen.matches[0], resolved["s_1"], "Wed 1 vs 2", isAdmin)}
+            ${renderSeniorenBracketMatch(sen.matches[1], resolved["s_2"], "Wed 3 vs 4", isAdmin)}
+            ${renderSeniorenBracketMatch(sen.matches[2], resolved["s_3"], "Wed 5 vs 6", isAdmin)}
+            ${renderSeniorenBracketMatch(sen.matches[3], resolved["s_4"], "Wed 7 vs 8", isAdmin)}
+
+            ${[9, 10, 11, 12].map(nr => `
+              <div class="match-box bye-box">
+                <div class="match-meta"><span>Vrijgeloot (start in Kwartfinale)</span></div>
+                <div class="team-line">
+                  <span class="lot-nr">${nr}</span>
+                  ${isAdmin ? `
+                    <select class="club-select ${!sen.slots[nr] ? 'empty-slot' : ''}" onchange="updateSenSlot(${nr}, this.value)">
+                      ${buildClubOptions(sen.slots[nr], `-- Kies team #${nr} --`)}
+                    </select>
+                  ` : `<span>${sen.slots[nr] || 'Nog te loten'}</span>`}
+                </div>
+              </div>
+            `).join("")}
           </div>
+
+          <!-- KWARTFINALE -->
           <div class="bracket-round">
-            <div class="round-title">Kwartfinale</div>
-            ${renderBracketMatch(sen.matches[4], resolved["s_qf1"], "KF 1")}
-            ${renderBracketMatch(sen.matches[5], resolved["s_qf2"], "KF 2")}
-            ${renderBracketMatch(sen.matches[6], resolved["s_qf3"], "KF 3")}
-            ${renderBracketMatch(sen.matches[7], resolved["s_qf4"], "KF 4")}
+            <div class="round-title">Kwartfinale <span class="round-subdate">${sen.dates.qf}</span></div>
+            ${renderSeniorenBracketMatch(sen.matches[4], resolved["s_qf1"], "Kwartfinale 1", isAdmin)}
+            ${renderSeniorenBracketMatch(sen.matches[5], resolved["s_qf2"], "Kwartfinale 2", isAdmin)}
+            ${renderSeniorenBracketMatch(sen.matches[6], resolved["s_qf3"], "Kwartfinale 3", isAdmin)}
+            ${renderSeniorenBracketMatch(sen.matches[7], resolved["s_qf4"], "Kwartfinale 4", isAdmin)}
           </div>
+
+          <!-- HALVE FINALE -->
           <div class="bracket-round">
-            <div class="round-title">Halve Finale</div>
-            ${renderBracketMatch(sen.matches[8], resolved["s_sf1"], "HF 1")}
-            ${renderBracketMatch(sen.matches[9], resolved["s_sf2"], "HF 2")}
+            <div class="round-title">Halve Finale <span class="round-subdate">${sen.dates.sf}</span></div>
+            ${renderSeniorenBracketMatch(sen.matches[8], resolved["s_sf1"], "Halve Finale 1", isAdmin)}
+            ${renderSeniorenBracketMatch(sen.matches[9], resolved["s_sf2"], "Halve Finale 2", isAdmin)}
           </div>
+
+          <!-- FINALE & KAMPIOEN -->
           <div class="bracket-round">
-            <div class="round-title">Finale (21-06-2026)</div>
-            ${renderBracketMatch(sen.matches[10], resolved["s_fin"], "FINALE")}
+            <div class="round-title">Finale <span class="round-subdate">${sen.dates.final}</span></div>
+            ${renderSeniorenBracketMatch(sen.matches[10], resolved["s_fin"], "FINALE", isAdmin)}
             <div class="champion-card">
               <h4>🏆 Kampioen Senioren</h4>
               <div class="champion-name">${champion}</div>
@@ -514,14 +938,14 @@ function renderSenioren() {
     ${isAdmin ? `
     <div class="card no-print">
       <div class="card-header">
-        <div class="card-title">✏️ Uitslagen & Beslissingen Invoeren – Senioren</div>
+        <div class="card-title">✏️ Uitslagen &amp; Beslissingen Invoeren – Senioren</div>
       </div>
       <div style="overflow-x:auto;">
         <table class="data-table">
           <thead>
             <tr>
               <th>Ronde</th>
-              <th>Code</th>
+              <th>Wedstrijd</th>
               <th>Thuis Team (1e wed)</th>
               <th>Uit Team</th>
               <th>Wed 1 (Th - Uit)</th>
@@ -564,7 +988,11 @@ function renderSenioren() {
                     ` : (res.winner ? '<span class="badge-ok">✓ Beslist</span>' : '<span style="color:#94a3b8;">Nog spelen</span>')}
                   </td>
                   <td><strong style="color:var(--primary);">${res.winner || '-'}</strong></td>
-                  <td>${m.ref}</td>
+                  <td>
+                    <select class="ref-select" onchange="updateSenRef(${idx}, this.value)">
+                      ${buildClubOptions(m.ref, "-- Kies scheids --")}
+                    </select>
+                  </td>
                 </tr>
               `;
             }).join("")}
@@ -578,35 +1006,46 @@ function renderSenioren() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-async function updateSenScore(idx, field, val) {
-  if (!currentUser) return;
-  if (field === 'decWinner') appData.senioren.matches[idx].decWinner = val;
-  else appData.senioren.matches[idx][field] = parseInt(val) || 0;
-  renderSenioren();
-  await saveState();
-}
-
-function renderBracketMatch(m, res, badgeText) {
+function renderSeniorenBracketMatch(m, res, badgeText, isAdmin) {
+  const sen = appData.senioren;
   const hWin = res.winner && res.winner === res.home;
   const aWin = res.winner && res.winner === res.away;
   const hTbd = res.home.startsWith("Winnaar") || res.home.startsWith("Nog");
   const aTbd = res.away.startsWith("Winnaar") || res.away.startsWith("Nog");
 
+  const mIdx = sen.matches.findIndex(x => x.id === m.id);
+  const canPickHome = isAdmin && m.slotHome && m.round === "Ronde 1";
+  const canPickAway = isAdmin && m.slotAway && m.round === "Ronde 1";
+
   return `
     <div class="match-box ${res.needsDecision && !res.winner ? 'needs-decision' : ''}">
       <div class="match-meta">
         <span>${badgeText}</span>
-        <span>📣 ${m.ref || ''}</span>
+        ${isAdmin ? `
+          <select class="ref-select" title="Scheidsrechter kiezen" onchange="updateSenRef(${mIdx}, this.value)">
+            ${buildClubOptions(m.ref, "📣 Scheidsrechter...")}
+          </select>
+        ` : `<span>${m.ref ? '📣 ' + m.ref : ''}</span>`}
       </div>
-      <div class="team-line ${hWin ? 'winner' : ''} ${hTbd ? 'tbd' : ''}">
-        <span>${res.home}</span>
+      <div class="team-line ${hWin ? 'winner' : ''} ${hTbd && !canPickHome ? 'tbd' : ''}">
+        ${m.slotHome ? `<span class="lot-nr">${m.slotHome}</span>` : ''}
+        ${canPickHome ? `
+          <select class="club-select ${!sen.slots[m.slotHome] ? 'empty-slot' : ''}" onchange="updateSenSlot(${m.slotHome}, this.value)">
+            ${buildClubOptions(sen.slots[m.slotHome], `-- Kies team #${m.slotHome} --`)}
+          </select>
+        ` : `<span style="flex:1;">${res.home}</span>`}
         <div class="score-pills">
           <span class="sc-pill">${m.sc1H ?? 0}</span>
           ${m.sc2H !== null ? `<span class="sc-pill">${m.sc2H ?? 0}</span>` : ''}
         </div>
       </div>
-      <div class="team-line ${aWin ? 'winner' : ''} ${aTbd ? 'tbd' : ''}" style="margin-top:3px;">
-        <span>${res.away}</span>
+      <div class="team-line ${aWin ? 'winner' : ''} ${aTbd && !canPickAway ? 'tbd' : ''}" style="margin-top:4px;">
+        ${m.slotAway ? `<span class="lot-nr">${m.slotAway}</span>` : ''}
+        ${canPickAway ? `
+          <select class="club-select ${!sen.slots[m.slotAway] ? 'empty-slot' : ''}" onchange="updateSenSlot(${m.slotAway}, this.value)">
+            ${buildClubOptions(sen.slots[m.slotAway], `-- Kies team #${m.slotAway} --`)}
+          </select>
+        ` : `<span style="flex:1;">${res.away}</span>`}
         <div class="score-pills">
           <span class="sc-pill">${m.sc1A ?? 0}</span>
           ${m.sc2A !== null ? `<span class="sc-pill">${m.sc2A ?? 0}</span>` : ''}
@@ -617,6 +1056,36 @@ function renderBracketMatch(m, res, badgeText) {
   `;
 }
 
+async function updateSenDate(key, val) {
+  if (!currentUser) return;
+  appData.senioren.dates[key] = val.trim();
+  renderSenioren();
+  await saveState();
+}
+
+async function updateSenSlot(slotNr, clubName) {
+  if (!currentUser) return;
+  appData.senioren.slots[slotNr] = clubName;
+  renderSenioren();
+  await saveState();
+}
+
+async function updateSenRef(idx, clubName) {
+  if (!currentUser) return;
+  appData.senioren.matches[idx].ref = clubName;
+  renderSenioren();
+  await saveState();
+}
+
+async function updateSenScore(idx, field, val) {
+  if (!currentUser) return;
+  if (field === 'decWinner') appData.senioren.matches[idx].decWinner = val;
+  else appData.senioren.matches[idx][field] = parseInt(val) || 0;
+  renderSenioren();
+  await saveState();
+}
+
+// ======================== RENDER POULE + KNOCKOUT (VETERANEN & JEUGD) ========================
 function renderPouleCompetition(compKey) {
   const comp = appData[compKey];
   const pouleResults = {};
@@ -627,14 +1096,14 @@ function renderPouleCompetition(compKey) {
   });
 
   function resolveTeamRef(refStr) {
-    if (!refStr) return "-";
+    if (!refStr) return "Nog onbekend";
     const [pName, pos] = refStr.split(":");
     const pr = pouleResults[pName];
     if (!pr) return refStr;
-    if (pos === "1") return pr.first;
-    if (pos === "2") return pr.second;
-    if (pos === "3") return pr.third;
-    return "-";
+    if (pos === "1") return pr.first || `1e ${pName}`;
+    if (pos === "2") return pr.second || `2e ${pName}`;
+    if (pos === "3") return pr.third || `3e ${pName}`;
+    return "Nog onbekend";
   }
 
   const resolvedKO = {};
@@ -650,14 +1119,43 @@ function renderPouleCompetition(compKey) {
   let html = `
     <div class="card">
       <div class="card-header">
-        <div class="card-title">🥇 ${comp.title || 'Veteranen'} – Poulefase & Kruisfinales</div>
-        <div class="dates-strip" style="margin:0;">
-          ${comp.dates.r1 ? `<span class="date-chip">Poules: ${comp.dates.r1}</span>` : ''}
-          ${comp.dates.qf ? `<span class="date-chip">Kwartfinale: ${comp.dates.qf}</span>` : ''}
-          ${comp.dates.sf ? `<span class="date-chip">Halve Finale: ${comp.dates.sf}</span>` : ''}
-          <span class="date-chip finale">Finale: ${comp.dates.final}</span>
-        </div>
+        <div class="card-title">🥇 ${comp.title || 'Veteranen'} (${activeSeason}) – Poulefase &amp; Kruisfinales</div>
+        ${!isAdmin ? `
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            ${comp.dates.r1 ? `<span class="date-chip">Poules: ${comp.dates.r1}</span>` : ''}
+            ${comp.dates.qf ? `<span class="date-chip">Kwartfinale: ${comp.dates.qf}</span>` : ''}
+            ${comp.dates.sf ? `<span class="date-chip">Halve Finale: ${comp.dates.sf}</span>` : ''}
+            <span class="date-chip finale">Finale: ${comp.dates.final}</span>
+          </div>
+        ` : ''}
       </div>
+
+      ${isAdmin ? `
+        <div class="dates-editor no-print">
+          ${comp.dates.r1 !== undefined ? `
+            <div class="date-field">
+              <label>📅 Speeldata Poulefase:</label>
+              <input type="text" value="${comp.dates.r1}" onchange="updateCompDate('${compKey}', 'r1', this.value)">
+            </div>
+          ` : ''}
+          ${comp.dates.qf !== undefined ? `
+            <div class="date-field">
+              <label>📅 Speeldata Kwartfinale:</label>
+              <input type="text" value="${comp.dates.qf}" onchange="updateCompDate('${compKey}', 'qf', this.value)">
+            </div>
+          ` : ''}
+          ${comp.dates.sf !== undefined ? `
+            <div class="date-field">
+              <label>📅 Speeldata Halve Finale:</label>
+              <input type="text" value="${comp.dates.sf}" onchange="updateCompDate('${compKey}', 'sf', this.value)">
+            </div>
+          ` : ''}
+          <div class="date-field">
+            <label>🏆 Datum Finaledag:</label>
+            <input type="text" value="${comp.dates.final}" onchange="updateCompDate('${compKey}', 'final', this.value)">
+          </div>
+        </div>
+      ` : ''}
 
       <div class="poules-grid">
         ${comp.poules.map((p, pIdx) => {
@@ -666,8 +1164,27 @@ function renderPouleCompetition(compKey) {
             <div class="poule-box">
               <div class="poule-title">
                 <span>${p.name}</span>
-                ${p.ref ? `<span style="font-size:0.74rem; color:#64748b;">📣 Scheids: ${p.ref}</span>` : ''}
+                ${isAdmin ? `
+                  <select class="ref-select" onchange="updatePouleRef('${compKey}', ${pIdx}, this.value)">
+                    ${buildClubOptions(p.ref, "📣 Scheidsrechter...")}
+                  </select>
+                ` : `<span style="font-size:0.75rem; color:#64748b;">${p.ref ? '📣 Scheids: ' + p.ref : ''}</span>`}
               </div>
+
+              ${isAdmin ? `
+                <div style="background:#f8fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:10px;">
+                  <div style="font-size:0.72rem; font-weight:800; color:#475569; margin-bottom:5px;">Loting Poule-teams (klik om vereniging te kiezen):</div>
+                  ${p.teams.map((tVal, tIdx) => `
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                      <span class="lot-nr">${p.slotNrs ? p.slotNrs[tIdx] : (tIdx + 1)}</span>
+                      <select class="club-select ${!tVal ? 'empty-slot' : ''}" onchange="updatePouleTeam('${compKey}', ${pIdx}, ${tIdx}, this.value)">
+                        ${buildClubOptions(tVal, `-- Kies team ${tIdx + 1} --`)}
+                      </select>
+                    </div>
+                  `).join("")}
+                </div>
+              ` : ''}
+
               <table class="data-table" style="margin-bottom:8px;">
                 <thead>
                   <tr>
@@ -677,32 +1194,33 @@ function renderPouleCompetition(compKey) {
                   </tr>
                 </thead>
                 <tbody>
-                  ${pr.totals.map(tObj => {
-                    let rankBadge = "";
-                    if (tObj.team === pr.first) rankBadge = '<span class="badge-ok">1e (Door)</span>';
-                    else if (tObj.team === pr.second) rankBadge = '<span class="badge-ok" style="background:#e0f2fe; color:#0369a1;">2e (Door)</span>';
-                    else rankBadge = '<span style="color:#94a3b8; font-size:0.74rem;">3e plek</span>';
+                  ${pr.totals.length === 0 ? `<tr><td colspan="3" style="color:#94a3b8; font-style:italic;">Nog geen teams ingedeeld</td></tr>` :
+                    pr.totals.map(tObj => {
+                      let rankBadge = "";
+                      if (tObj.team === pr.first) rankBadge = '<span class="badge-ok">1e (Door)</span>';
+                      else if (tObj.team === pr.second) rankBadge = '<span class="badge-ok" style="background:#e0f2fe; color:#0369a1;">2e (Door)</span>';
+                      else rankBadge = '<span style="color:#94a3b8; font-size:0.74rem;">3e plek</span>';
 
-                    return `
-                      <tr>
-                        <td><strong>${tObj.team}</strong></td>
-                        <td style="text-align:center; font-weight:900; font-size:0.9rem;">${tObj.pts}</td>
-                        <td>${rankBadge}</td>
-                      </tr>
-                    `;
-                  }).join("")}
+                      return `
+                        <tr>
+                          <td><strong>${tObj.team}</strong></td>
+                          <td style="text-align:center; font-weight:900; font-size:0.9rem;">${tObj.pts}</td>
+                          <td>${rankBadge}</td>
+                        </tr>
+                      `;
+                    }).join("")}
                 </tbody>
               </table>
 
-              ${isAdmin ? `
+              ${isAdmin && pr.totals.length > 0 ? `
               <div class="no-print" style="background:#f8fafc; padding:6px 8px; border-radius:5px; border:1px solid #e2e8f0;">
                 <div style="font-size:0.72rem; font-weight:800; color:#475569; margin-bottom:4px;">Punten per wedstrijddag invullen:</div>
                 ${p.games.map((g, gIdx) => `
                   <div style="display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:3px; font-size:0.75rem;">
                     <span style="min-width:75px; font-weight:600;">${g.label}:</span>
                     <div style="display:flex; gap:4px; align-items:center;">
-                      <span title="${p.teams[0]}">T1:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p1}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p1', this.value)">
-                      <span title="${p.teams[1]}">T2:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p2}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p2', this.value)">
+                      ${p.teams[0] ? `<span title="${p.teams[0]}">T1:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p1}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p1', this.value)">` : ''}
+                      ${p.teams[1] ? `<span title="${p.teams[1]}">T2:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p2}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p2', this.value)">` : ''}
                       ${p.teams[2] ? `<span title="${p.teams[2]}">T3:</span><input type="number" min="0" max="6" class="sc-input" style="width:36px;" value="${g.p3}" onchange="updatePoulePts('${compKey}', ${pIdx}, ${gIdx}, 'p3', this.value)">` : ''}
                     </div>
                   </div>
@@ -713,7 +1231,7 @@ function renderPouleCompetition(compKey) {
                     <span class="badge-decision">Beslissing Poulewinnaar:</span>
                     <select class="dec-select" onchange="updatePouleDec('${compKey}', ${pIdx}, this.value)">
                       <option value="">-- Kies 1e plek --</option>
-                      ${p.teams.map(t => `<option value="${t}" ${p.decWinner === t ? 'selected' : ''}>${t}</option>`).join("")}
+                      ${p.teams.filter(Boolean).map(t => `<option value="${t}" ${p.decWinner === t ? 'selected' : ''}>${t}</option>`).join("")}
                     </select>
                   </div>
                 ` : ''}
@@ -725,7 +1243,7 @@ function renderPouleCompetition(compKey) {
       </div>
 
       <div class="card-header" style="margin-top:10px;">
-        <div class="card-title">⚔️ Vervolgrondes & Finale</div>
+        <div class="card-title">⚔️ Vervolgrondes &amp; Finale</div>
         <div class="champion-card" style="padding:6px 16px; display:flex; align-items:center; gap:10px;">
           <h4>🏆 Kampioen:</h4>
           <div class="champion-name" style="margin:0;">${champion}</div>
@@ -781,7 +1299,13 @@ function renderPouleCompetition(compKey) {
                     ) : (res.winner ? '<span class="badge-ok">✓ Beslist</span>' : '<span style="color:#94a3b8;">Nog spelen</span>')}
                   </td>
                   <td><strong style="color:var(--primary);">${res.winner || '-'}</strong></td>
-                  <td>${m.ref || '-'}</td>
+                  <td>
+                    ${isAdmin ? `
+                      <select class="ref-select" onchange="updateKORef('${compKey}', ${kIdx}, this.value)">
+                        ${buildClubOptions(m.ref, "-- Scheidsrechter --")}
+                      </select>
+                    ` : (m.ref || '-')}
+                  </td>
                 </tr>
               `;
             }).join("")}
@@ -792,6 +1316,27 @@ function renderPouleCompetition(compKey) {
   `;
 
   document.getElementById("mainContent").innerHTML = html;
+}
+
+async function updateCompDate(compKey, dateKey, val) {
+  if (!currentUser) return;
+  appData[compKey].dates[dateKey] = val.trim();
+  renderCurrentTab();
+  await saveState();
+}
+
+async function updatePouleTeam(compKey, pIdx, tIdx, val) {
+  if (!currentUser) return;
+  appData[compKey].poules[pIdx].teams[tIdx] = val;
+  renderCurrentTab();
+  await saveState();
+}
+
+async function updatePouleRef(compKey, pIdx, val) {
+  if (!currentUser) return;
+  appData[compKey].poules[pIdx].ref = val;
+  renderCurrentTab();
+  await saveState();
 }
 
 async function updatePoulePts(compKey, pIdx, gIdx, field, val) {
@@ -816,40 +1361,296 @@ async function updateKOScore(compKey, kIdx, field, val) {
   await saveState();
 }
 
+async function updateKORef(compKey, kIdx, val) {
+  if (!currentUser) return;
+  appData[compKey].knockout[kIdx].ref = val;
+  renderCurrentTab();
+  await saveState();
+}
+
+// ======================== SCHEIDSRECHTERS OVERZICHT ========================
 function renderScheidsrechters() {
   const byRef = {};
   function addRefTask(ref, cat, matchName) {
-    if (!ref || ref === "-") return;
+    if (!ref || ref === "-" || ref.trim() === "") return;
     if (!byRef[ref]) byRef[ref] = [];
     byRef[ref].push({ cat, matchName });
   }
 
   appData.senioren.matches.forEach(m => addRefTask(m.ref, "Senioren", `${m.round} (${m.code})`));
-  appData.veteranen.poules.forEach(p => addRefTask(p.ref, "Veteranen", `Poulefase ${p.name}`));
-  appData.veteranen.knockout.forEach(m => addRefTask(m.ref, "Veteranen", m.label));
+  ["veteranen", "jeugdCup", "jeugdA", "jeugdB"].forEach(ck => {
+    const c = appData[ck];
+    c.poules.forEach(p => addRefTask(p.ref, c.title, `Poulefase ${p.name}`));
+    c.knockout.forEach(m => addRefTask(m.ref, c.title, m.label));
+  });
+
+  const keys = Object.keys(byRef).sort();
 
   let html = `
     <div class="card">
       <div class="card-header">
-        <div class="card-title">📣 Scheidsrechters-indeling per Vereniging</div>
+        <div class="card-title">📣 Scheidsrechters-indeling per Vereniging (${activeSeason})</div>
       </div>
-      <div class="poules-grid">
-        ${Object.keys(byRef).sort().map(refName => `
-          <div class="poule-box" style="border-left: 4px solid var(--accent);">
-            <div class="poule-title" style="color:#92400e;">
-              <span>📣 ${refName}</span>
-              <span class="badge-ok" style="background:#fef3c7; color:#92400e;">${byRef[refName].length} aanstelling(en)</span>
+      ${keys.length === 0 ? `<p style="color:#64748b; padding:12px;">Er zijn nog geen scheidsrechters ingedeeld voor seizoen ${activeSeason}.</p>` : `
+        <div class="poules-grid">
+          ${keys.map(refName => `
+            <div class="poule-box" style="border-left: 4px solid var(--accent);">
+              <div class="poule-title" style="color:#92400e;">
+                <span>📣 ${refName}</span>
+                <span class="badge-ok" style="background:#fef3c7; color:#92400e;">${byRef[refName].length} aanstelling(en)</span>
+              </div>
+              <ul style="padding-left:18px; font-size:0.8rem; color:#334155;">
+                ${byRef[refName].map(t => `<li style="margin-bottom:4px;"><strong>${t.cat}:</strong> ${t.matchName}</li>`).join("")}
+              </ul>
             </div>
-            <ul style="padding-left:18px; font-size:0.8rem; color:#334155;">
-              ${byRef[refName].map(t => `<li style="margin-bottom:4px;"><strong>${t.cat}:</strong> ${t.matchName}</li>`).join("")}
-            </ul>
-          </div>
-        `).join("")}
-      </div>
+          `).join("")}
+        </div>
+      `}
     </div>
   `;
 
   document.getElementById("mainContent").innerHTML = html;
+}
+
+// ======================== OFFICIËLE RONDE PDF / PRINT GENERATOR ========================
+function openPdfGenerator() {
+  document.getElementById("pdfCatSelect").value = (currentTab === "scheids") ? "senioren" : (currentTab === "jeugd-cup" ? "jeugdCup" : (currentTab === "jeugd-a" ? "jeugdA" : (currentTab === "jeugd-b" ? "jeugdB" : currentTab)));
+  document.getElementById("pdfSelectModal").style.display = "flex";
+}
+
+function generateAndPrintPdf() {
+  const cat = document.getElementById("pdfCatSelect").value;
+  const roundFilter = document.getElementById("pdfRoundSelect").value;
+  document.getElementById("pdfSelectModal").style.display = "none";
+
+  const pdfDiv = document.getElementById("pdfPrintView");
+  let innerHTML = "";
+
+  if (cat === "senioren") {
+    const sen = appData.senioren;
+    const res = getSeniorenResolved();
+    const champ = res["s_fin"]?.winner || "";
+
+    const showQF = ["all", "Kwartfinale", "Halve Finale", "Finale"].includes(roundFilter);
+    const showSF = ["all", "Halve Finale", "Finale"].includes(roundFilter);
+    const showFin = ["all", "Finale"].includes(roundFilter);
+
+    const refRows = sen.matches.filter(m => {
+      if (roundFilter === "Ronde 1") return m.round === "Ronde 1";
+      if (roundFilter === "Kwartfinale") return ["Ronde 1", "Kwartfinale"].includes(m.round);
+      if (roundFilter === "Halve Finale") return ["Ronde 1", "Kwartfinale", "Halve Finale"].includes(m.round);
+      return true;
+    });
+
+    innerHTML = `
+      <div class="pdf-banner">
+        <div>
+          <h2>🏆 KTO CUP ${activeSeason} – SENIOREN</h2>
+          <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+            Klootschietersbond Twente Oost &bull; ${roundFilter === 'all' ? 'Volledig Toernooischema' : 'Overzicht t/m ' + roundFilter}
+          </div>
+        </div>
+        <div class="pdf-meta-right">
+          <div>Finaledag: ${sen.dates.final}</div>
+          <div style="font-size:0.75rem; color:#64748b;">Stand per ${new Date().toLocaleDateString('nl-NL')}</div>
+        </div>
+      </div>
+
+      <div class="pdf-bracket-grid">
+        <!-- KOLOM 1: RONDE 1 -->
+        <div>
+          <div class="pdf-col-header">Ronde 1 <span>${sen.dates.r1}</span></div>
+          ${[0,1,2,3].map(i => {
+            const m = sen.matches[i];
+            const r = res[m.id];
+            return `
+              <div class="pdf-slot-card">
+                <div class="pdf-slot-row"><span><span class="pdf-slot-nr">${m.slotHome}.</span> ${sen.slots[m.slotHome] || ''}</span><span>${m.sc1H || m.sc2H ? `${m.sc1H}-${m.sc2H}` : ''}</span></div>
+                <div class="pdf-slot-row"><span><span class="pdf-slot-nr">${m.slotAway}.</span> ${sen.slots[m.slotAway] || ''}</span><span>${m.sc1A || m.sc2A ? `${m.sc1A}-${m.sc2A}` : ''}</span></div>
+              </div>
+            `;
+          }).join("")}
+          ${[9,10,11,12].map(nr => `
+            <div class="pdf-slot-card" style="background:#f8fafc;">
+              <div class="pdf-slot-row"><span><span class="pdf-slot-nr">${nr}.</span> ${sen.slots[nr] || '(Vrijgeloot)'}</span><span style="font-size:0.7rem; color:#64748b;">Vrij</span></div>
+            </div>
+          `).join("")}
+        </div>
+
+        <!-- KOLOM 2: KWARTFINALE -->
+        <div>
+          <div class="pdf-col-header">Kwartfinale <span>${sen.dates.qf}</span></div>
+          ${showQF ? ["s_qf1", "s_qf2", "s_qf3", "s_qf4"].map((id, idx) => {
+            const m = sen.matches.find(x => x.id === id);
+            const r = res[id];
+            return `
+              <div class="pdf-slot-card" style="margin-bottom:24px;">
+                <div style="background:#f1f5f9; font-size:0.7rem; font-weight:800; padding:2px 8px; color:#475569;">Kwartfinale ${idx + 1}</div>
+                <div class="pdf-slot-row"><span>${r.home.startsWith('Winnaar') ? '' : r.home}</span><span>${m.sc1H || m.sc2H ? `${m.sc1H}-${m.sc2H}` : ''}</span></div>
+                <div class="pdf-slot-row"><span>${r.away.startsWith('Winnaar') ? '' : r.away}</span><span>${m.sc1A || m.sc2A ? `${m.sc1A}-${m.sc2A}` : ''}</span></div>
+              </div>
+            `;
+          }).join("") : '<div style="color:#94a3b8; font-style:italic; text-align:center; padding-top:20px;">Volgt na Ronde 1</div>'}
+        </div>
+
+        <!-- KOLOM 3: HALVE FINALE -->
+        <div>
+          <div class="pdf-col-header">Halve Finale <span>${sen.dates.sf}</span></div>
+          ${showSF ? ["s_sf1", "s_sf2"].map((id, idx) => {
+            const m = sen.matches.find(x => x.id === id);
+            const r = res[id];
+            return `
+              <div class="pdf-slot-card" style="margin-top:34px; margin-bottom:70px;">
+                <div style="background:#f1f5f9; font-size:0.7rem; font-weight:800; padding:2px 8px; color:#475569;">Halve Finale ${idx + 1}</div>
+                <div class="pdf-slot-row"><span>${r.home.startsWith('Winnaar') ? '' : r.home}</span><span>${m.sc1H || m.sc2H ? `${m.sc1H}-${m.sc2H}` : ''}</span></div>
+                <div class="pdf-slot-row"><span>${r.away.startsWith('Winnaar') ? '' : r.away}</span><span>${m.sc1A || m.sc2A ? `${m.sc1A}-${m.sc2A}` : ''}</span></div>
+              </div>
+            `;
+          }).join("") : '<div style="color:#94a3b8; font-style:italic; text-align:center; padding-top:20px;">Volgt na Kwartfinale</div>'}
+        </div>
+
+        <!-- KOLOM 4: FINALE & KAMPIOEN -->
+        <div>
+          <div class="pdf-col-header">Finale <span>${sen.dates.final}</span></div>
+          ${showFin ? (() => {
+            const m = sen.matches.find(x => x.id === "s_fin");
+            const r = res["s_fin"];
+            return `
+              <div class="pdf-slot-card" style="margin-top:95px;">
+                <div style="background:#fef3c7; font-size:0.72rem; font-weight:800; padding:3px 8px; color:#92400e;">FINALE</div>
+                <div class="pdf-slot-row"><span>${r.home.startsWith('Winnaar') ? '' : r.home}</span><span>${m.sc1H || ''}</span></div>
+                <div class="pdf-slot-row"><span>${r.away.startsWith('Winnaar') ? '' : r.away}</span><span>${m.sc1A || ''}</span></div>
+              </div>
+              <div style="border:2px solid #f59e0b; background:#fffbeb; border-radius:6px; padding:10px; text-align:center; margin-top:20px;">
+                <div style="font-size:0.72rem; font-weight:800; color:#92400e;">KAMPIOEN SENIOREN</div>
+                <div style="font-size:1.05rem; font-weight:900; color:#78350f; margin-top:4px; min-height:22px;">${champ}</div>
+              </div>
+            `;
+          })() : '<div style="color:#94a3b8; font-style:italic; text-align:center; padding-top:20px;">Volgt na Halve Finale</div>'}
+        </div>
+      </div>
+
+      <table class="pdf-ref-table">
+        <thead>
+          <tr>
+            <th style="width:180px;">Wedstrijd nr:</th>
+            <th>Wedstrijd</th>
+            <th style="width:240px;">Scheidsrechter</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${refRows.map(m => {
+            const r = res[m.id];
+            const hTxt = r.home.startsWith('Winnaar') || r.home.startsWith('Nog') ? '-' : r.home;
+            const aTxt = r.away.startsWith('Winnaar') || r.away.startsWith('Nog') ? '-' : r.away;
+            return `
+              <tr>
+                <td><strong>${m.code}</strong></td>
+                <td>${hTxt} - ${aTxt}</td>
+                <td>${m.ref || 'Nog in te delen'}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+
+      <div class="pdf-rules-box">
+        <strong>Wedstrijdbepalingen KTO Cup:</strong> Bovenste team speelt de 1ste wedstrijd thuis. Bij een gelijke stand na uit- en thuiswedstrijd volgt een beslissingswedstrijd op neutraal terrein.
+      </div>
+    `;
+  } else {
+    // Poule + Knock-out PDF voor Veteranen / Jeugd
+    const comp = appData[cat];
+    const pouleRes = {};
+    comp.poules.forEach(p => { pouleRes[p.name] = evaluatePoule(p); });
+
+    innerHTML = `
+      <div class="pdf-banner">
+        <div>
+          <h2>🏆 KTO CUP ${activeSeason} – ${comp.title.toUpperCase()}</h2>
+          <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+            Klootschietersbond Twente Oost &bull; Poule-indeling, Speelschema &amp; Scheidsrechters
+          </div>
+        </div>
+        <div class="pdf-meta-right">
+          <div>Finaledag: ${comp.dates.final}</div>
+          <div style="font-size:0.75rem; color:#64748b;">Stand per ${new Date().toLocaleDateString('nl-NL')}</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:14px; margin-bottom:18px;">
+        ${comp.poules.map(p => {
+          const pr = pouleRes[p.name];
+          return `
+            <div style="border:1.5px solid #334155; border-radius:6px; overflow:hidden;">
+              <div style="background:var(--primary); color:white; padding:6px 10px; font-weight:800; display:flex; justify-content:space-between;">
+                <span>${p.name} (${comp.dates.r1})</span>
+                <span style="font-size:0.75rem; color:#bbf7d0;">Scheids: ${p.ref || '-'}</span>
+              </div>
+              <table class="pdf-ref-table" style="margin:0;">
+                <thead><tr><th style="width:35px;">Nr</th><th>Vereniging</th><th style="width:65px; text-align:center;">Punten</th></tr></thead>
+                <tbody>
+                  ${p.teams.map((t, idx) => {
+                    const tot = pr.totals.find(x => x.team === t);
+                    return `<tr><td>${p.slotNrs ? p.slotNrs[idx] : idx+1}</td><td>${t || 'Nog te loten'}</td><td style="text-align:center;">${tot ? tot.pts : 0}</td></tr>`;
+                  }).join("")}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }).join("")}
+      </div>
+
+      ${roundFilter !== "Ronde 1" ? `
+        <h3 style="color:var(--primary); margin-bottom:8px;">Vervolgrondes &amp; Scheidsrechters</h3>
+        <table class="pdf-ref-table">
+          <thead>
+            <tr>
+              <th>Wedstrijd</th>
+              <th>Thuis Team</th>
+              <th>Uit Team</th>
+              <th>Uitslag</th>
+              <th>Scheidsrechter</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${comp.knockout.map(m => {
+              let h = m.homeRef || m.fromHome;
+              let a = m.awayRef || m.fromAway;
+              if (m.homeRef) {
+                const [pn, pos] = m.homeRef.split(":");
+                h = (pos === "1" ? pouleRes[pn]?.first : (pos === "2" ? pouleRes[pn]?.second : pouleRes[pn]?.third)) || m.homeRef;
+              }
+              if (m.awayRef) {
+                const [pn, pos] = m.awayRef.split(":");
+                a = (pos === "1" ? pouleRes[pn]?.first : (pos === "2" ? pouleRes[pn]?.second : pouleRes[pn]?.third)) || m.awayRef;
+              }
+              return `
+                <tr>
+                  <td><strong>${m.label}</strong></td>
+                  <td>${h}</td>
+                  <td>${a}</td>
+                  <td>${m.sc1H || m.sc1A ? `${m.sc1H}-${m.sc1A}` : '-'}</td>
+                  <td>${m.ref || '-'}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      ` : ''}
+
+      <div class="pdf-rules-box">
+        <strong>Thuisvoordeel Poulefase:</strong> 1e wedstrijd spelen de eerste teams uit de poule thuis; 2e wedstrijd de tweede teams; 3e wedstrijd de derde teams.
+      </div>
+    `;
+  }
+
+  pdfDiv.innerHTML = innerHTML;
+  pdfDiv.style.display = "block";
+  setTimeout(() => {
+    window.print();
+    pdfDiv.style.display = "none";
+  }, 250);
 }
 
 function renderCurrentTab() {
@@ -864,12 +1665,14 @@ function renderCurrentTab() {
 function exportToExcel() {
   if (typeof XLSX === "undefined") return alert("Excel module laadt nog...");
   const wb = XLSX.utils.book_new();
-  const senRows = [["Ronde", "Code", "Thuis", "Uit", "Sc1 Th", "Sc1 Uit", "Sc2 Th", "Sc2 Uit", "Beslissing", "Scheidsrechter"]];
+  const senRes = getSeniorenResolved();
+  const senRows = [[`KTO CUP ${activeSeason} - SENIOREN`], ["Ronde", "Code", "Thuis", "Uit", "Sc1 Th", "Sc1 Uit", "Sc2 Th", "Sc2 Uit", "Beslissing", "Winnaar", "Scheidsrechter"]];
   appData.senioren.matches.forEach(m => {
-    senRows.push([m.round, m.code, m.home || m.fromHome, m.away || m.fromAway, m.sc1H, m.sc1A, m.sc2H ?? "-", m.sc2A ?? "-", m.decWinner, m.ref]);
+    const r = senRes[m.id];
+    senRows.push([m.round, m.code, r.home, r.away, m.sc1H, m.sc1A, m.sc2H ?? "-", m.sc2A ?? "-", m.decWinner, r.winner || "", m.ref]);
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(senRows), "Senioren");
-  XLSX.writeFile(wb, "KTO_Cup_2026_Live_Standen.xlsx");
+  XLSX.writeFile(wb, `KTO_Cup_${activeSeason.replace('/','-')}.xlsx`);
 }
 
 initApp();
