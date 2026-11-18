@@ -198,17 +198,21 @@
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 22px;
   }
   .pdf-col-header {
-    background: var(--primary); color: white; padding: 6px 10px; border-radius: 5px;
-    font-weight: 800; font-size: 0.82rem; text-align: center; margin-bottom: 10px;
+    background: #0f5132 !important; color: #ffffff !important; padding: 8px 10px; border-radius: 6px;
+    font-weight: 900; font-size: 0.92rem; text-align: center; margin-bottom: 10px;
+    border: 1.5px solid #0a3622;
   }
-  .pdf-col-header span { display: block; font-size: 0.72rem; font-weight: 500; color: #bbf7d0; margin-top: 2px; }
+  .pdf-col-header span {
+    display: block; font-size: 0.84rem; font-weight: 800; color: #fef08a !important;
+    margin-top: 3px; letter-spacing: 0.2px;
+  }
   .pdf-slot-card {
-    border: 1.5px solid #334155; border-radius: 5px; margin-bottom: 10px; background: #fff;
+    border: 1.5px solid #1e293b; border-radius: 5px; margin-bottom: 6px; background: #fff;
     overflow: hidden;
   }
   .pdf-slot-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 5px 8px; font-size: 0.82rem; font-weight: 700; min-height: 28px;
+    padding: 4px 8px; font-size: 0.84rem; font-weight: 800; color: #0f172a; min-height: 24px;
   }
   .pdf-slot-row:first-child { border-bottom: 1px solid #cbd5e1; }
   .pdf-slot-nr {
@@ -218,20 +222,94 @@
     width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.82rem;
   }
   .pdf-ref-table th {
-    background: #f1f5f9; color: var(--primary); font-weight: 800; border: 1px solid #94a3b8; padding: 6px 10px; text-align: left;
+    background: #e2e8f0; color: #0f172a; font-weight: 900; border: 1px solid #64748b; padding: 4px 8px; text-align: left; font-size: 0.8rem;
   }
   .pdf-ref-table td {
-    border: 1px solid #94a3b8; padding: 6px 10px; font-weight: 600;
+    border: 1px solid #64748b; padding: 4px 8px; font-weight: 700; color: #0f172a; font-size: 0.8rem;
   }
   .pdf-rules-box {
     margin-top: 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;
     padding: 10px 14px; font-size: 0.78rem; color: #334155;
   }
 
+
+  /* CUPLOTING MACHINE STYLES */
+  .loting-grid {
+    display: grid; grid-template-columns: 1.1fr 1.2fr; gap: 18px;
+  }
+  @media (max-width: 900px) { .loting-grid { grid-template-columns: 1fr; } }
+
+  .club-check-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 6px;
+    max-height: 310px; overflow-y: auto; padding: 8px;
+    background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 7px;
+  }
+  .club-check-item {
+    display: flex; align-items: center; gap: 7px; padding: 5px 8px;
+    background: white; border: 1px solid #e2e8f0; border-radius: 5px;
+    font-size: 0.8rem; font-weight: 700; cursor: pointer; user-select: none;
+    transition: all 0.12s;
+  }
+  .club-check-item:hover { border-color: var(--primary-light); background: #f0fdf4; }
+  .club-check-item.checked {
+    background: #dcfce7; border-color: #16a34a; color: #065f46;
+  }
+
+  .drum-stage {
+    background: linear-gradient(135deg, #064e3b 0%, #0f5132 100%);
+    color: white; border-radius: 10px; padding: 18px; text-align: center;
+    box-shadow: 0 6px 18px rgba(15, 81, 50, 0.22); margin-bottom: 14px;
+  }
+  .drum-ball {
+    background: white; color: var(--primary); border: 4px solid #f59e0b;
+    border-radius: 12px; padding: 14px 18px; margin: 12px auto; max-width: 380px;
+    font-size: 1.25rem; font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    min-height: 62px; display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .drum-ball.shuffling {
+    animation: pulseShake 0.14s infinite alternate;
+    background: #fef3c7; color: #92400e;
+  }
+  @keyframes pulseShake {
+    from { transform: scale(0.98) rotate(-1deg); }
+    to { transform: scale(1.02) rotate(1deg); }
+  }
+  .drawn-slot-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.83rem;
+  }
+  .drawn-slot-row.just-drawn {
+    background: #fef9c3; animation: fadeHighlight 1.5s ease-out;
+  }
+  @keyframes fadeHighlight {
+    from { background: #fde047; }
+    to { background: #ffffff; }
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
   @media print {
-    body { background: white !important; padding: 0 !important; }
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    html, body {
+      background: white !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+    }
     .no-print, header, .nav-tabs, #mainContent { display: none !important; }
-    #pdfPrintView { display: block !important; border: none !important; padding: 0 !important; max-width: 100% !important; }
+    #pdfPrintView {
+      display: block !important;
+      border: none !important;
+      padding: 10mm 14mm !important;
+      max-width: 100% !important;
+      width: 100% !important;
+    }
   }
 </style>
 </head>
@@ -268,6 +346,7 @@
       <button class="tab-btn" id="tab-jeugd-a" onclick="switchTab('jeugd-a')">🎯 Jeugd A Klasse</button>
       <button class="tab-btn" id="tab-jeugd-b" onclick="switchTab('jeugd-b')">🌱 Jeugd B Klasse</button>
       <button class="tab-btn" id="tab-scheids" onclick="switchTab('scheids')">📣 Scheidsrechters</button>
+      <button class="tab-btn" id="tab-loting" style="display:none; background:#fef3c7; color:#92400e; border:1px solid #f59e0b;" onclick="switchTab('loting')">🎲 Cuploting</button>
     </div>
     <div class="tabs-right">
       <button class="btn btn-sm" id="btnClearSeason" style="display:none; color:#dc2626;" onclick="clearCurrentSeasonData()">🧹 Loting &amp; Uitslagen leegmaken</button>
@@ -541,6 +620,134 @@ function buildVeteranenPoulesForCount(teamCount, existingPoules) {
   return { teamCount: count, poules };
 }
 
+
+function buildJeugdStructureForCount(compKey, teamCount, existingData) {
+  const count = Math.max(4, Math.min(8, parseInt(teamCount) || 6));
+  const sizeA = Math.ceil(count / 2);
+  const sizeB = Math.floor(count / 2);
+  const sizes = [sizeA, sizeB];
+  const names = ["Poule A", "Poule B"];
+
+  const oldPoulesMap = {};
+  if (existingData && Array.isArray(existingData.poules)) {
+    existingData.poules.forEach(p => { oldPoulesMap[p.name] = p; });
+  }
+  const oldKOMap = {};
+  if (existingData && Array.isArray(existingData.knockout)) {
+    existingData.knockout.forEach(m => { oldKOMap[m.id] = m; });
+  }
+
+  let slotCounter = 1;
+  const poules = names.map((pName, idx) => {
+    const sz = sizes[idx];
+    const old = oldPoulesMap[pName] || {};
+    const slotNrs = [];
+    const teams = [];
+    for (let t = 0; t < sz; t++) {
+      slotNrs.push(slotCounter++);
+      teams.push((old.teams && old.teams[t]) ? old.teams[t] : "");
+    }
+    const gameCount = sz === 2 ? 2 : (sz === 3 ? 3 : 6);
+    const games = [];
+    for (let g = 0; g < gameCount; g++) {
+      const oldG = (old.games && old.games[g]) ? old.games[g] : {};
+      games.push({
+        label: "Wedstrijd " + (g + 1),
+        p1: oldG.p1 ?? 0,
+        p2: oldG.p2 ?? 0,
+        p3: oldG.p3 ?? 0,
+        p4: oldG.p4 ?? 0
+      });
+    }
+    return {
+      name: pName,
+      slotNrs,
+      teams,
+      games,
+      decWinner: old.decWinner ?? ""
+    };
+  });
+
+  const prefix = compKey === "jeugdCup" ? "jc" : (compKey === "jeugdA" ? "ja" : "jb");
+  const knockout = [];
+
+  const oldSf1 = oldKOMap[prefix + "_sf1"] || {};
+  knockout.push({
+    id: prefix + "_sf1",
+    round: "Halve Finale",
+    label: "Halve Finale 1 (1e Poule A - 2e Poule B)",
+    homeRef: "Poule A:1",
+    awayRef: "Poule B:2",
+    sc1H: oldSf1.sc1H ?? 0,
+    sc1A: oldSf1.sc1A ?? 0,
+    sc2H: oldSf1.sc2H ?? 0,
+    sc2A: oldSf1.sc2A ?? 0,
+    decWinner: oldSf1.decWinner ?? ""
+  });
+
+  const oldSf2 = oldKOMap[prefix + "_sf2"] || {};
+  knockout.push({
+    id: prefix + "_sf2",
+    round: "Halve Finale",
+    label: "Halve Finale 2 (1e Poule B - 2e Poule A)",
+    homeRef: "Poule B:1",
+    awayRef: "Poule A:2",
+    sc1H: oldSf2.sc1H ?? 0,
+    sc1A: oldSf2.sc1A ?? 0,
+    sc2H: oldSf2.sc2H ?? 0,
+    sc2A: oldSf2.sc2A ?? 0,
+    decWinner: oldSf2.decWinner ?? ""
+  });
+
+  if (sizeA >= 3 && sizeB >= 3) {
+    const old56 = oldKOMap[prefix + "_56"] || {};
+    knockout.push({
+      id: prefix + "_56",
+      round: "5e / 6e Plek",
+      label: "5de en 6de plek (3e Poule A - 3e Poule B)",
+      homeRef: "Poule A:3",
+      awayRef: "Poule B:3",
+      sc1H: old56.sc1H ?? 0,
+      sc1A: old56.sc1A ?? 0,
+      sc2H: null,
+      sc2A: null,
+      decWinner: old56.decWinner ?? ""
+    });
+  }
+
+  if (sizeA >= 4 && sizeB >= 4) {
+    const old78 = oldKOMap[prefix + "_78"] || {};
+    knockout.push({
+      id: prefix + "_78",
+      round: "7e / 8e Plek",
+      label: "7de en 8ste plek (4e Poule A - 4e Poule B)",
+      homeRef: "Poule A:4",
+      awayRef: "Poule B:4",
+      sc1H: old78.sc1H ?? 0,
+      sc1A: old78.sc1A ?? 0,
+      sc2H: null,
+      sc2A: null,
+      decWinner: old78.decWinner ?? ""
+    });
+  }
+
+  const oldFin = oldKOMap[prefix + "_fin"] || {};
+  knockout.push({
+    id: prefix + "_fin",
+    round: "Finale",
+    label: "FINALE",
+    fromHome: prefix + "_sf1",
+    fromAway: prefix + "_sf2",
+    sc1H: oldFin.sc1H ?? 0,
+    sc1A: oldFin.sc1A ?? 0,
+    sc2H: null,
+    sc2A: null,
+    decWinner: oldFin.decWinner ?? ""
+  });
+
+  return { teamCount: count, poules, knockout };
+}
+
 function createEmptySeasonTemplate(seasonLabel) {
   return {
     season: seasonLabel,
@@ -582,44 +789,36 @@ function createEmptySeasonTemplate(seasonLabel) {
         ]
       };
     })(),
-    jeugdCup: {
-      title: "Jeugd Cup Klasse",
-      dates: { r1: "12-4 / 19-4 / 3-5 / 10-5", sf: "17-5 / 31-5 / 7-6", final: "Zondag 20 juni 2027" },
-      poules: [
-        { name: "Poule A", slotNrs: [1, 2, 3], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" },
-        { name: "Poule B", slotNrs: [4, 5, 6], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" }
-      ],
-      knockout: [
-        { id: "jc_sf1", round: "Halve Finale", label: "Halve Finale 1 (1e Poule A - 2e Poule B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "jc_sf2", round: "Halve Finale", label: "Halve Finale 2 (1e Poule B - 2e Poule A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "jc_56", round: "5e / 6e Plek", label: "5de en 6de plek (3e Poule A - 3e Poule B)", homeRef: "Poule A:3", awayRef: "Poule B:3", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" },
-        { id: "jc_fin", round: "Finale", label: "FINALE", fromHome: "jc_sf1", fromAway: "jc_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" }
-      ]
-    },
-    jeugdA: {
-      title: "Jeugd A Klasse",
-      dates: { r1: "12-4 / 19-4 / 3-5 / 10-5", sf: "17-5 / 31-5 / 7-6", final: "Zondag 20 juni 2027" },
-      poules: [
-        { name: "Poule A", slotNrs: [1, 2, 3], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" },
-        { name: "Poule B", slotNrs: [4, 5, 6], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" }
-      ],
-      knockout: [
-        { id: "ja_sf1", round: "Halve Finale", label: "Halve Finale 1 (1e Poule A - 2e Poule B)", homeRef: "Poule A:1", awayRef: "Poule B:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "ja_sf2", round: "Halve Finale", label: "Halve Finale 2 (1e Poule B - 2e Poule A)", homeRef: "Poule B:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: 0, sc2A: 0, decWinner: "", ref: "" },
-        { id: "ja_56", round: "5e / 6e Plek", label: "5de en 6de plek (3e Poule A - 3e Poule B)", homeRef: "Poule A:3", awayRef: "Poule B:3", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" },
-        { id: "ja_fin", round: "Finale", label: "FINALE", fromHome: "ja_sf1", fromAway: "ja_sf2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" }
-      ]
-    },
-    jeugdB: {
-      title: "Jeugd B Klasse",
-      dates: { r1: "3-5 / 17-5", final: "Zondag 20 juni 2027" },
-      poules: [
-        { name: "Poule A", slotNrs: [1, 2, 3], teams: ["", "", ""], games: [{ label: "Wedstrijd 1", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 2", p1: 0, p2: 0, p3: 0 }, { label: "Wedstrijd 3", p1: 0, p2: 0, p3: 0 }], decWinner: "", ref: "" }
-      ],
-      knockout: [
-        { id: "jb_fin", round: "Finale", label: "FINALE (1e Poule A - 2e Poule A)", homeRef: "Poule A:1", awayRef: "Poule A:2", sc1H: 0, sc1A: 0, sc2H: null, sc2A: null, decWinner: "", ref: "" }
-      ]
-    }
+    jeugdCup: (() => {
+      const b = buildJeugdStructureForCount("jeugdCup", 6, null);
+      return {
+        title: "Jeugd Cup Klasse",
+        teamCount: b.teamCount,
+        dates: { r1: "12-4 / 19-4 / 3-5 / 10-5", sf: "17-5 / 31-5 / 7-6", final: "Zondag 20 juni 2027" },
+        poules: b.poules,
+        knockout: b.knockout
+      };
+    })(),
+    jeugdA: (() => {
+      const b = buildJeugdStructureForCount("jeugdA", 6, null);
+      return {
+        title: "Jeugd A Klasse",
+        teamCount: b.teamCount,
+        dates: { r1: "12-4 / 19-4 / 3-5 / 10-5", sf: "17-5 / 31-5 / 7-6", final: "Zondag 20 juni 2027" },
+        poules: b.poules,
+        knockout: b.knockout
+      };
+    })(),
+    jeugdB: (() => {
+      const b = buildJeugdStructureForCount("jeugdB", 4, null);
+      return {
+        title: "Jeugd B Klasse",
+        teamCount: b.teamCount,
+        dates: { r1: "3-5 / 17-5", sf: "31-5 / 7-6", final: "Zondag 20 juni 2027" },
+        poules: b.poules,
+        knockout: b.knockout
+      };
+    })()
   };
 }
 
@@ -674,6 +873,8 @@ function updateAuthUI() {
     btnNewS.style.display = "inline-flex";
     btnClubs.style.display = "inline-flex";
     btnClear.style.display = "inline-flex";
+    const tabLot = document.getElementById("tab-loting");
+    if (tabLot) tabLot.style.display = "inline-flex";
   } else {
     badge.innerText = "Alleen-lezen (Bezoeker)";
     badge.style.background = "rgba(255,255,255,0.16)";
@@ -682,6 +883,9 @@ function updateAuthUI() {
     btnNewS.style.display = "none";
     btnClubs.style.display = "none";
     btnClear.style.display = "none";
+    const tabLot = document.getElementById("tab-loting");
+    if (tabLot) tabLot.style.display = "none";
+    if (currentTab === "loting") switchTab("senioren");
   }
 }
 
@@ -924,7 +1128,7 @@ function evaluateMatch(m, homeName, awayName) {
 function evaluatePoule(poule) {
   const activeTeams = poule.teams.filter(t => t && t.trim() !== "");
   if (activeTeams.length === 0) {
-    return { totals: [], first: "", second: "", third: "", needsDecision: false };
+    return { totals: [], first: "", second: "", third: "", fourth: "", needsDecision: false };
   }
 
   const totals = poule.teams.map((t, idx) => {
@@ -947,15 +1151,17 @@ function evaluatePoule(poule) {
   let first = sorted[0] ? sorted[0].team : "";
   let second = sorted[1] ? sorted[1].team : "";
   let third = sorted[2] ? sorted[2].team : "";
+  let fourth = sorted[3] ? sorted[3].team : "";
 
   if (needsDecision && poule.decWinner && activeTeams.includes(poule.decWinner)) {
     first = poule.decWinner;
     const rest = sorted.filter(x => x.team !== first);
     second = rest[0] ? rest[0].team : "";
     third = rest[1] ? rest[1].team : "";
+    fourth = rest[2] ? rest[2].team : "";
   }
 
-  return { totals, first, second, third, needsDecision };
+  return { totals, first, second, third, fourth, needsDecision };
 }
 
 function getSeniorenResolved() {
@@ -1101,7 +1307,7 @@ function renderSenioren() {
               <th>Wed 2 (Th - Uit)</th>
               <th>Status / Beslissing</th>
               <th>Winnaar</th>
-              <th>Scheidsrechter</th>
+              ${compKey === 'veteranen' ? '<th>Scheidsrechter</th>' : ''}
             </tr>
           </thead>
           <tbody>
@@ -1262,6 +1468,7 @@ function renderPouleCompetition(compKey) {
     if (pos === "1") return pr.first || `1e ${pName}`;
     if (pos === "2") return pr.second || `2e ${pName}`;
     if (pos === "3") return pr.third || `3e ${pName}`;
+    if (pos === "4") return pr.fourth || `4e ${pName}`;
     return "Nog onbekend";
   }
 
@@ -1279,7 +1486,7 @@ function renderPouleCompetition(compKey) {
     <div class="card">
       <div class="card-header">
         <div class="card-title">
-          🥇 ${comp.title || 'Veteranen'} (${activeSeason}) – Poulefase &amp; Kruisfinales
+          ${compKey === 'veteranen' ? '🥇' : '⚡'} ${comp.title || 'Veteranen'} (${activeSeason}) – Poulefase &amp; Kruisfinales
           ${compKey === 'veteranen' ? (isAdmin ? `
             <span style="background:#dcfce7; border:1px solid #86efac; padding:3px 9px; border-radius:6px; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px;">
               <span>Aantal teams:</span>
@@ -1291,7 +1498,17 @@ function renderPouleCompetition(compKey) {
                 }).join("")}
               </select>
             </span>
-          ` : `<span class="date-chip" style="background:#dcfce7; border-color:#86efac; color:#065f46;">${comp.teamCount || 12} teams</span>`) : ''}
+          ` : `<span class="date-chip" style="background:#dcfce7; border-color:#86efac; color:#065f46;">${comp.teamCount || 12} teams</span>`) : (isAdmin ? `
+            <span style="background:#dcfce7; border:1px solid #86efac; padding:3px 9px; border-radius:6px; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px;">
+              <span>Aantal teams:</span>
+              <select style="font-weight:800; color:var(--primary); border:1px solid #86efac; border-radius:4px; padding:2px 6px;" onchange="changeJeugdTeamCount('${compKey}', this.value)">
+                ${[4,5,6,7,8].map(n => {
+                  const dist = `${Math.ceil(n/2)}-${Math.floor(n/2)}`;
+                  return `<option value="${n}" ${n === (comp.teamCount || 6) ? 'selected' : ''}>${n} teams (poules: ${dist})</option>`;
+                }).join("")}
+              </select>
+            </span>
+          ` : `<span class="date-chip" style="background:#dcfce7; border-color:#86efac; color:#065f46;">${comp.teamCount || 6} teams</span>`)}
         </div>
         ${!isAdmin ? `
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
@@ -1337,11 +1554,11 @@ function renderPouleCompetition(compKey) {
             <div class="poule-box">
               <div class="poule-title">
                 <span>${p.name}</span>
-                ${isAdmin ? `
+                ${compKey === 'veteranen' ? (isAdmin ? `
                   <select class="ref-select" onchange="updatePouleRef('${compKey}', ${pIdx}, this.value)">
                     ${buildClubOptions(p.ref, "📣 Scheidsrechter...")}
                   </select>
-                ` : `<span style="font-size:0.75rem; color:#64748b;">${p.ref ? '📣 Scheids: ' + p.ref : ''}</span>`}
+                ` : `<span style="font-size:0.75rem; color:#64748b;">${p.ref ? '📣 Scheids: ' + p.ref : ''}</span>`) : ''}
               </div>
 
               ${isAdmin ? `
@@ -1372,7 +1589,8 @@ function renderPouleCompetition(compKey) {
                       let rankBadge = "";
                       if (tObj.team === pr.first) rankBadge = '<span class="badge-ok">1e (Door)</span>';
                       else if (tObj.team === pr.second) rankBadge = '<span class="badge-ok" style="background:#e0f2fe; color:#0369a1;">2e (Door)</span>';
-                      else rankBadge = '<span style="color:#94a3b8; font-size:0.74rem;">3e plek</span>';
+                      else if (tObj.team === pr.third) rankBadge = '<span style="color:#64748b; font-size:0.74rem;">3e plek</span>';
+                      else rankBadge = '<span style="color:#94a3b8; font-size:0.74rem;">4e plek</span>';
 
                       return `
                         <tr>
@@ -1435,7 +1653,7 @@ function renderPouleCompetition(compKey) {
               <th>Wed 2 (Th - Uit)</th>
               <th>Status</th>
               <th>Winnaar</th>
-              <th>Scheidsrechter</th>
+              ${compKey === 'veteranen' ? '<th>Scheidsrechter</th>' : ''}
             </tr>
           </thead>
           <tbody>
@@ -1473,13 +1691,13 @@ function renderPouleCompetition(compKey) {
                     ) : (res.winner ? '<span class="badge-ok">✓ Beslist</span>' : '<span style="color:#94a3b8;">Nog spelen</span>')}
                   </td>
                   <td><strong style="color:var(--primary);">${res.winner || '-'}</strong></td>
-                  <td>
+                  ${compKey === 'veteranen' ? `<td>
                     ${isAdmin ? `
                       <select class="ref-select" onchange="updateKORef('${compKey}', ${kIdx}, this.value)">
                         ${buildClubOptions(m.ref, "-- Scheidsrechter --")}
                       </select>
                     ` : (m.ref || '-')}
-                  </td>
+                  </td>` : ''}
                 </tr>
               `;
             }).join("")}
@@ -1492,6 +1710,17 @@ function renderPouleCompetition(compKey) {
   document.getElementById("mainContent").innerHTML = html;
 }
 
+
+
+async function changeJeugdTeamCount(compKey, newCount) {
+  if (!currentUser) return;
+  const built = buildJeugdStructureForCount(compKey, newCount, appData[compKey]);
+  appData[compKey].teamCount = built.teamCount;
+  appData[compKey].poules = built.poules;
+  appData[compKey].knockout = built.knockout;
+  renderCurrentTab();
+  await saveState();
+}
 
 async function changeVeteranenTeamCount(newCount) {
   if (!currentUser) return;
@@ -1672,8 +1901,8 @@ function generateAndPrintPdf() {
             return `
               <div class="pdf-slot-card" style="margin-bottom:24px;">
                 <div style="background:#f1f5f9; font-size:0.7rem; font-weight:800; padding:2px 8px; color:#475569;">Kwartfinale ${idx + 1}</div>
-                <div class="pdf-slot-row"><span>${r.home.startsWith('Winnaar') ? '' : r.home}</span><span>${m.sc1H || m.sc2H ? `${m.sc1H}-${m.sc2H}` : ''}</span></div>
-                <div class="pdf-slot-row"><span>${r.away.startsWith('Winnaar') ? '' : r.away}</span><span>${m.sc1A || m.sc2A ? `${m.sc1A}-${m.sc2A}` : ''}</span></div>
+                <div class="pdf-slot-row"><span>${(r.home.startsWith('Winnaar') || r.home.startsWith('Nog')) ? '' : r.home}</span><span>${m.sc1H || m.sc2H ? `${m.sc1H}-${m.sc2H}` : ''}</span></div>
+                <div class="pdf-slot-row"><span>${(r.away.startsWith('Winnaar') || r.away.startsWith('Nog')) ? '' : r.away}</span><span>${m.sc1A || m.sc2A ? `${m.sc1A}-${m.sc2A}` : ''}</span></div>
               </div>
             `;
           }).join("") : '<div style="color:#94a3b8; font-style:italic; text-align:center; padding-top:20px;">Volgt na Ronde 1</div>'}
@@ -1688,8 +1917,8 @@ function generateAndPrintPdf() {
             return `
               <div class="pdf-slot-card" style="margin-top:34px; margin-bottom:70px;">
                 <div style="background:#f1f5f9; font-size:0.7rem; font-weight:800; padding:2px 8px; color:#475569;">Halve Finale ${idx + 1}</div>
-                <div class="pdf-slot-row"><span>${r.home.startsWith('Winnaar') ? '' : r.home}</span><span>${m.sc1H || m.sc2H ? `${m.sc1H}-${m.sc2H}` : ''}</span></div>
-                <div class="pdf-slot-row"><span>${r.away.startsWith('Winnaar') ? '' : r.away}</span><span>${m.sc1A || m.sc2A ? `${m.sc1A}-${m.sc2A}` : ''}</span></div>
+                <div class="pdf-slot-row"><span>${(r.home.startsWith('Winnaar') || r.home.startsWith('Nog')) ? '' : r.home}</span><span>${m.sc1H || m.sc2H ? `${m.sc1H}-${m.sc2H}` : ''}</span></div>
+                <div class="pdf-slot-row"><span>${(r.away.startsWith('Winnaar') || r.away.startsWith('Nog')) ? '' : r.away}</span><span>${m.sc1A || m.sc2A ? `${m.sc1A}-${m.sc2A}` : ''}</span></div>
               </div>
             `;
           }).join("") : '<div style="color:#94a3b8; font-style:italic; text-align:center; padding-top:20px;">Volgt na Kwartfinale</div>'}
@@ -1704,8 +1933,8 @@ function generateAndPrintPdf() {
             return `
               <div class="pdf-slot-card" style="margin-top:95px;">
                 <div style="background:#fef3c7; font-size:0.72rem; font-weight:800; padding:3px 8px; color:#92400e;">FINALE</div>
-                <div class="pdf-slot-row"><span>${r.home.startsWith('Winnaar') ? '' : r.home}</span><span>${m.sc1H || ''}</span></div>
-                <div class="pdf-slot-row"><span>${r.away.startsWith('Winnaar') ? '' : r.away}</span><span>${m.sc1A || ''}</span></div>
+                <div class="pdf-slot-row"><span>${(r.home.startsWith('Winnaar') || r.home.startsWith('Nog')) ? '' : r.home}</span><span>${m.sc1H || ''}</span></div>
+                <div class="pdf-slot-row"><span>${(r.away.startsWith('Winnaar') || r.away.startsWith('Nog')) ? '' : r.away}</span><span>${m.sc1A || ''}</span></div>
               </div>
               <div style="border:2px solid #f59e0b; background:#fffbeb; border-radius:6px; padding:10px; text-align:center; margin-top:20px;">
                 <div style="font-size:0.72rem; font-weight:800; color:#92400e;">KAMPIOEN SENIOREN</div>
@@ -1769,9 +1998,9 @@ function generateAndPrintPdf() {
           const pr = pouleRes[p.name];
           return `
             <div style="border:1.5px solid #334155; border-radius:6px; overflow:hidden;">
-              <div style="background:var(--primary); color:white; padding:6px 10px; font-weight:800; display:flex; justify-content:space-between;">
-                <span>${p.name} (${comp.dates.r1})</span>
-                <span style="font-size:0.75rem; color:#bbf7d0;">Scheids: ${p.ref || '-'}</span>
+              <div style="background:#0f5132; color:#ffffff; padding:7px 10px; font-weight:900; font-size:0.9rem; display:flex; justify-content:space-between; align-items:center;">
+                <span>${p.name} &bull; <span style="color:#fef08a; font-weight:800;">${comp.dates.r1}</span></span>
+                ${cat === 'veteranen' ? `<span style="font-size:0.8rem; color:#ffffff; font-weight:700;">Scheids: ${p.ref || '-'}</span>` : ''}
               </div>
               <table class="pdf-ref-table" style="margin:0;">
                 <thead><tr><th style="width:35px;">Nr</th><th>Vereniging</th><th style="width:65px; text-align:center;">Punten</th></tr></thead>
@@ -1796,7 +2025,7 @@ function generateAndPrintPdf() {
               <th>Thuis Team</th>
               <th>Uit Team</th>
               <th>Uitslag</th>
-              <th>Scheidsrechter</th>
+              ${cat === 'veteranen' ? '<th>Scheidsrechter</th>' : ''}
             </tr>
           </thead>
           <tbody>
@@ -1805,11 +2034,11 @@ function generateAndPrintPdf() {
               let a = m.awayRef || m.fromAway;
               if (m.homeRef) {
                 const [pn, pos] = m.homeRef.split(":");
-                h = (pos === "1" ? pouleRes[pn]?.first : (pos === "2" ? pouleRes[pn]?.second : pouleRes[pn]?.third)) || m.homeRef;
+                h = (pos === "1" ? pouleRes[pn]?.first : (pos === "2" ? pouleRes[pn]?.second : (pos === "3" ? pouleRes[pn]?.third : pouleRes[pn]?.fourth))) || m.homeRef;
               }
               if (m.awayRef) {
                 const [pn, pos] = m.awayRef.split(":");
-                a = (pos === "1" ? pouleRes[pn]?.first : (pos === "2" ? pouleRes[pn]?.second : pouleRes[pn]?.third)) || m.awayRef;
+                a = (pos === "1" ? pouleRes[pn]?.first : (pos === "2" ? pouleRes[pn]?.second : (pos === "3" ? pouleRes[pn]?.third : pouleRes[pn]?.fourth))) || m.awayRef;
               }
               return `
                 <tr>
@@ -1817,7 +2046,7 @@ function generateAndPrintPdf() {
                   <td>${h}</td>
                   <td>${a}</td>
                   <td>${m.sc1H || m.sc1A ? `${m.sc1H}-${m.sc1A}` : '-'}</td>
-                  <td>${m.ref || '-'}</td>
+                  ${cat === 'veteranen' ? `<td>${m.ref || '-'}</td>` : ''}
                 </tr>
               `;
             }).join("")}
@@ -1839,6 +2068,313 @@ function generateAndPrintPdf() {
   }, 250);
 }
 
+
+// ======================== DIGITALE CUPLOTING MACHINE ========================
+let lotingState = {
+  cat: "senioren",
+  selectedClubs: [],
+  pot: [],
+  drawn: [], // array of { slotNr, label, club }
+  isSpinning: false,
+  lastDrawnIndex: -1
+};
+
+function getLotingSlotsMeta(cat) {
+  if (cat === "senioren") {
+    const sen = appData.senioren;
+    const count = sen.teamCount || 12;
+    const r1Count = count - 8;
+    const list = [];
+    for (let i = 1; i <= count; i++) {
+      let info = "";
+      if (i <= r1Count * 2) {
+        const pairStart = i % 2 === 1 ? i : i - 1;
+        info = `Ronde 1 (Wed ${pairStart} vs ${pairStart + 1})`;
+      } else {
+        info = "Vrijgeloot (Kwartfinale)";
+      }
+      list.push({ slotNr: i, info });
+    }
+    return list;
+  } else {
+    const comp = appData[cat];
+    const list = [];
+    comp.poules.forEach(p => {
+      p.teams.forEach((_, idx) => {
+        const nr = p.slotNrs ? p.slotNrs[idx] : (list.length + 1);
+        list.push({ slotNr: nr, info: `${p.name} (Plek ${idx + 1})` });
+      });
+    });
+    return list;
+  }
+}
+
+function initLotingForCat(cat) {
+  lotingState.cat = cat;
+  const slotsMeta = getLotingSlotsMeta(cat);
+  const allClubs = [...(appData.clubs || DEFAULT_CLUBS)].sort();
+  // Pre-select first N clubs if empty, or keep valid ones
+  lotingState.selectedClubs = allClubs.slice(0, slotsMeta.length);
+  lotingState.pot = [];
+  lotingState.drawn = [];
+  lotingState.isSpinning = false;
+  lotingState.lastDrawnIndex = -1;
+}
+
+function renderCuploting() {
+  if (!currentUser) {
+    switchTab("senioren");
+    return;
+  }
+  const slotsMeta = getLotingSlotsMeta(lotingState.cat);
+  const needed = slotsMeta.length;
+  if (lotingState.selectedClubs.length === 0 && lotingState.drawn.length === 0 && lotingState.pot.length === 0) {
+    initLotingForCat(lotingState.cat);
+  }
+
+  const allClubs = [...(appData.clubs || DEFAULT_CLUBS)].sort();
+  const selCount = lotingState.selectedClubs.length;
+  const isDrawingActive = lotingState.drawn.length > 0 || lotingState.pot.length > 0;
+  const isComplete = lotingState.drawn.length === needed && needed > 0;
+
+  const latestDraw = lotingState.drawn.length > 0 ? lotingState.drawn[lotingState.drawn.length - 1] : null;
+
+  let html = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🎲 Digitale Cuploting (${activeSeason}) – Geen papiertjes meer nodig!</div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <label style="font-weight:800; font-size:0.82rem; color:var(--primary);">Kies categorie:</label>
+          <select style="padding:5px 10px; border-radius:6px; border:1.5px solid var(--primary); font-weight:800; color:var(--primary);" onchange="changeLotingCategory(this.value)">
+            <option value="senioren" ${lotingState.cat === 'senioren' ? 'selected' : ''}>🏆 Senioren (${appData.senioren.teamCount || 12} teams)</option>
+            <option value="veteranen" ${lotingState.cat === 'veteranen' ? 'selected' : ''}>🥇 Veteranen (${appData.veteranen.teamCount || 12} teams)</option>
+            <option value="jeugdCup" ${lotingState.cat === 'jeugdCup' ? 'selected' : ''}>⚡ Jeugd Cup Klasse (${appData.jeugdCup.teamCount || 6} teams)</option>
+            <option value="jeugdA" ${lotingState.cat === 'jeugdA' ? 'selected' : ''}>🎯 Jeugd A Klasse (${appData.jeugdA.teamCount || 6} teams)</option>
+            <option value="jeugdB" ${lotingState.cat === 'jeugdB' ? 'selected' : ''}>🌱 Jeugd B Klasse (${appData.jeugdB.teamCount || 4} teams)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="loting-grid">
+        <!-- LINKERKOLOM: DEELNEMENDE VERENIGINGEN KIEZEN -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+            <span style="font-weight:800; color:#1e293b;">1. Vink de deelnemende verenigingen aan:</span>
+            <span class="badge-ok" style="${selCount === needed ? 'background:#dcfce7; color:#166534;' : 'background:#fee2e2; color:#dc2626;'}">
+              ${selCount} / ${needed} geselecteerd
+            </span>
+          </div>
+
+          <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="lotingSelectAll(${needed})" ${isDrawingActive ? 'disabled' : ''}>Eerste ${needed} aanvinken</button>
+            <button class="btn btn-sm" onclick="lotingClearSelection()" ${isDrawingActive ? 'disabled' : ''}>Alles uitvinken</button>
+            <button class="btn btn-sm" onclick="openClubsModal()">+ Nieuwe vereniging/combi</button>
+          </div>
+
+          <div class="club-check-grid">
+            ${allClubs.map(club => {
+              const isChecked = lotingState.selectedClubs.includes(club);
+              return `
+                <label class="club-check-item ${isChecked ? 'checked' : ''}" style="${isDrawingActive ? 'opacity:0.65; pointer-events:none;' : ''}">
+                  <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleLotingClub('${club.replace(/'/g, "\'")}')">
+                  <span>${club}</span>
+                </label>
+              `;
+            }).join("")}
+          </div>
+          <p style="font-size:0.75rem; color:#64748b; margin-top:6px;">
+            💡 Klopt het aantal teams (${needed}) niet? Pas bovenaan het tabblad van de klasse eerst het aantal teams aan.
+          </p>
+        </div>
+
+        <!-- RECHTERKOLOM: DE LOTINGSTROMMEL & UITSLAG -->
+        <div>
+          <div style="font-weight:800; color:#1e293b; margin-bottom:8px;">2. De Lotingstrommel &amp; Trekking:</div>
+
+          <div class="drum-stage">
+            <div style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.6px; color:#bbf7d0; font-weight:800;">
+              ${isComplete ? '🎉 De loting is compleet!' : (isDrawingActive ? `Nog ${lotingState.pot.length} balletje(s) in de trommel` : 'Klaar om te loten')}
+            </div>
+
+            <div id="drumBallDisplay" class="drum-ball">
+              ${latestDraw ? `<span style="background:#0f5132; color:white; padding:3px 10px; border-radius:8px; font-size:1rem;">#${latestDraw.slotNr}</span> <span>${latestDraw.club}</span>` : '<span style="color:#64748b; font-size:0.95rem;">Druk op "Start Loting"</span>'}
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px;">
+              ${!isDrawingActive ? `
+                <button class="btn btn-accent" style="font-size:0.88rem; padding:8px 16px;" onclick="startLotingPot()" ${selCount !== needed ? 'disabled' : ''}>
+                  🎲 Vul trommel &amp; Start Loting
+                </button>
+              ` : ''}
+
+              ${isDrawingActive && !isComplete ? `
+                <button class="btn btn-accent" style="font-size:0.88rem; padding:8px 16px;" onclick="drawNextBall(false)" ${lotingState.isSpinning ? 'disabled' : ''}>
+                  🎱 Trek volgende bal (#${lotingState.drawn.length + 1})
+                </button>
+                <button class="btn" style="font-size:0.82rem;" onclick="drawAllRemaining()" ${lotingState.isSpinning ? 'disabled' : ''}>
+                  ⚡ Alles in één keer loten
+                </button>
+              ` : ''}
+
+              ${isDrawingActive ? `
+                <button class="btn btn-sm" style="background:rgba(255,255,255,0.2); color:white; border-color:rgba(255,255,255,0.4);" onclick="resetLotingDrum()">
+                  ↺ Opnieuw loten
+                </button>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- OVERZICHT VAN GETROKKEN LOTNUMMERS -->
+          <div style="border:1px solid #cbd5e1; border-radius:8px; background:white; overflow:hidden;">
+            <div style="background:#f1f5f9; padding:7px 10px; font-weight:800; font-size:0.8rem; color:#334155; display:flex; justify-content:space-between; align-items:center;">
+              <span>Uitslag Loting (${lotingState.drawn.length} / ${needed})</span>
+              ${isComplete ? `
+                <button class="btn btn-primary btn-sm" onclick="applyLotingToTournament()">
+                  ✅ Loting overnemen in Toernooischema
+                </button>
+              ` : ''}
+            </div>
+            <div style="max-height:260px; overflow-y:auto;">
+              ${slotsMeta.map((sm, idx) => {
+                const d = lotingState.drawn[idx];
+                const isLast = idx === lotingState.lastDrawnIndex;
+                return `
+                  <div class="drawn-slot-row ${isLast ? 'just-drawn' : ''}">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span class="lot-nr">${sm.slotNr}</span>
+                      <strong>${d ? d.club : '<span style="color:#94a3b8; font-weight:500;">Nog te trekken...</span>'}</strong>
+                    </div>
+                    <span style="font-size:0.74rem; color:#64748b; font-weight:600;">${sm.info}</span>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+function changeLotingCategory(cat) {
+  initLotingForCat(cat);
+  renderCuploting();
+}
+
+function toggleLotingClub(club) {
+  const idx = lotingState.selectedClubs.indexOf(club);
+  if (idx >= 0) lotingState.selectedClubs.splice(idx, 1);
+  else lotingState.selectedClubs.push(club);
+  renderCuploting();
+}
+
+function lotingSelectAll(needed) {
+  const allClubs = [...(appData.clubs || DEFAULT_CLUBS)].sort();
+  lotingState.selectedClubs = allClubs.slice(0, needed);
+  renderCuploting();
+}
+
+function lotingClearSelection() {
+  lotingState.selectedClubs = [];
+  renderCuploting();
+}
+
+function startLotingPot() {
+  const slotsMeta = getLotingSlotsMeta(lotingState.cat);
+  if (lotingState.selectedClubs.length !== slotsMeta.length) {
+    return alert(`Selecteer precies ${slotsMeta.length} verenigingen om te kunnen loten.`);
+  }
+  // Fisher-Yates cryptografisch sterke shuffle
+  const arr = [...lotingState.selectedClubs];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const randArray = new Uint32Array(1);
+    window.crypto.getRandomValues(randArray);
+    const j = randArray[0] % (i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  lotingState.pot = arr;
+  lotingState.drawn = [];
+  lotingState.lastDrawnIndex = -1;
+  renderCuploting();
+}
+
+function drawNextBall(instant = false) {
+  if (lotingState.pot.length === 0 || lotingState.isSpinning) return;
+  const slotsMeta = getLotingSlotsMeta(lotingState.cat);
+  const nextSlot = slotsMeta[lotingState.drawn.length];
+
+  if (instant) {
+    const club = lotingState.pot.shift();
+    lotingState.drawn.push({ slotNr: nextSlot.slotNr, info: nextSlot.info, club });
+    lotingState.lastDrawnIndex = lotingState.drawn.length - 1;
+    renderCuploting();
+    return;
+  }
+
+  lotingState.isSpinning = true;
+  const ballEl = document.getElementById("drumBallDisplay");
+  if (ballEl) ballEl.classList.add("shuffling");
+
+  let ticks = 0;
+  const interval = setInterval(() => {
+    ticks++;
+    if (ballEl && lotingState.pot.length > 0) {
+      const rndClub = lotingState.pot[Math.floor(Math.random() * lotingState.pot.length)];
+      ballEl.innerHTML = `<span style="background:#d97706; color:white; padding:3px 10px; border-radius:8px; font-size:1rem;">#${nextSlot.slotNr}</span> <span>${rndClub}</span>`;
+    }
+    if (ticks >= 12) {
+      clearInterval(interval);
+      lotingState.isSpinning = false;
+      const chosenClub = lotingState.pot.shift();
+      lotingState.drawn.push({ slotNr: nextSlot.slotNr, info: nextSlot.info, club: chosenClub });
+      lotingState.lastDrawnIndex = lotingState.drawn.length - 1;
+      renderCuploting();
+    }
+  }, 75);
+}
+
+function drawAllRemaining() {
+  while (lotingState.pot.length > 0) {
+    drawNextBall(true);
+  }
+}
+
+function resetLotingDrum() {
+  lotingState.pot = [];
+  lotingState.drawn = [];
+  lotingState.isSpinning = false;
+  lotingState.lastDrawnIndex = -1;
+  renderCuploting();
+}
+
+async function applyLotingToTournament() {
+  if (!currentUser) return;
+  const cat = lotingState.cat;
+  if (cat === "senioren") {
+    lotingState.drawn.forEach(d => {
+      appData.senioren.slots[d.slotNr] = d.club;
+    });
+    await saveState();
+    switchTab("senioren");
+  } else {
+    const comp = appData[cat];
+    let idx = 0;
+    comp.poules.forEach(p => {
+      for (let t = 0; t < p.teams.length; t++) {
+        if (lotingState.drawn[idx]) {
+          p.teams[t] = lotingState.drawn[idx].club;
+          idx++;
+        }
+      }
+    });
+    await saveState();
+    const tabMap = { veteranen: "veteranen", jeugdCup: "jeugd-cup", jeugdA: "jeugd-a", jeugdB: "jeugd-b" };
+    switchTab(tabMap[cat] || "senioren");
+  }
+}
+
 function renderCurrentTab() {
   if (currentTab === "senioren") renderSenioren();
   else if (currentTab === "veteranen") renderPouleCompetition("veteranen");
@@ -1846,6 +2382,7 @@ function renderCurrentTab() {
   else if (currentTab === "jeugd-a") renderPouleCompetition("jeugdA");
   else if (currentTab === "jeugd-b") renderPouleCompetition("jeugdB");
   else if (currentTab === "scheids") renderScheidsrechters();
+  else if (currentTab === "loting") renderCuploting();
 }
 
 function exportToExcel() {
