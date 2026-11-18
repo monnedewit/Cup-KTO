@@ -897,6 +897,19 @@ function getDutchHolidaysForYear(yr) {
 }
 
 
+
+function buildRoulatieYearOptions(currentVal) {
+  const opts = ["", "-"];
+  for (let y = 2018; y <= 2040; y++) {
+    opts.push(String(y));
+  }
+  opts.push("2024 oud", "2025 oud");
+  if (currentVal && !opts.includes(currentVal)) {
+    opts.splice(2, 0, currentVal);
+  }
+  return opts.map(o => `<option value="${o}" ${o === currentVal ? 'selected' : ''}>${o === '' ? '-- Kies jaar --' : o}</option>`).join("");
+}
+
 function createDefaultRoulatieschema() {
   return [
     { club: "Beuningen", lvc: "", ktoCompCup: "2024", ktoFinales: "2025" },
@@ -3571,10 +3584,9 @@ function renderReglementen() {
         <table class="data-table">
           <thead>
             <tr>
-              <th>Vereniging / Baan</th>
-              <th style="text-align:center; width:150px;">LVC<br>SEN &amp; JUN</th>
-              <th style="text-align:center; width:150px;">KTO<br>comp &amp; cup</th>
-              <th style="text-align:center; width:150px;">KTO<br>Cup-Finales</th>
+              <th>Vereniging / Baan ${isAdmin ? '<span style="font-weight:500; color:#64748b; font-size:0.74rem;">(klik op naam om aan te passen)</span>' : ''}</th>
+              <th style="text-align:center; width:180px;">KTO<br>comp &amp; cup</th>
+              <th style="text-align:center; width:180px;">KTO<br>Cup-Finales</th>
               ${isAdmin ? '<th style="width:36px;"></th>' : ''}
             </tr>
           </thead>
@@ -3588,10 +3600,21 @@ function renderReglementen() {
                 const rowBg = (isCompMatch || isFinMatch) ? "#fefce8" : "";
                 return `
                   <tr style="background:${rowBg};">
-                    <td><strong>${isAdmin ? `<input type="text" value="${r.club}" style="width:100%; padding:2px 5px; border:1px solid #cbd5e1; border-radius:4px; font-weight:700;" onchange="updateRoulatieRow(${idx}, 'club', this.value)">` : r.club}</strong></td>
-                    <td style="text-align:center;">${isAdmin ? `<input type="text" value="${r.lvc || ''}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateRoulatieRow(${idx}, 'lvc', this.value)">` : (r.lvc || '')}</td>
-                    <td style="text-align:center; background:${isCompMatch ? '#dcfce7' : ''};">${isAdmin ? `<input type="text" value="${r.ktoCompCup || ''}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center; font-weight:${isCompMatch ? '800' : '500'};" onchange="updateRoulatieRow(${idx}, 'ktoCompCup', this.value)">` : `<strong>${r.ktoCompCup || ''}</strong>`}</td>
-                    <td style="text-align:center; background:${isFinMatch ? '#fef08a' : ''};">${isAdmin ? `<input type="text" value="${r.ktoFinales || ''}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center; font-weight:${isFinMatch ? '800' : '500'};" onchange="updateRoulatieRow(${idx}, 'ktoFinales', this.value)">` : `<strong>${r.ktoFinales || ''}</strong>`}</td>
+                    <td>
+                      ${isAdmin
+                        ? `<input type="text" value="${r.club}" placeholder="Naam vereniging / baan..." style="width:100%; padding:4px 8px; border:1.5px solid #94a3b8; border-radius:5px; font-weight:700; color:#0f172a; background:white;" onchange="updateRoulatieRow(${idx}, 'club', this.value)">`
+                        : `<strong>${r.club}</strong>`}
+                    </td>
+                    <td style="text-align:center; background:${isCompMatch ? '#dcfce7' : ''};">
+                      ${isAdmin
+                        ? `<select style="width:100%; padding:4px 6px; border:1.5px solid ${isCompMatch ? '#16a34a' : '#cbd5e1'}; border-radius:5px; text-align:center; font-weight:${isCompMatch ? '800' : '600'}; background:${isCompMatch ? '#dcfce7' : 'white'}; cursor:pointer;" onchange="updateRoulatieRow(${idx}, 'ktoCompCup', this.value)">${buildRoulatieYearOptions(r.ktoCompCup || '')}</select>`
+                        : `<strong>${r.ktoCompCup || ''}</strong>`}
+                    </td>
+                    <td style="text-align:center; background:${isFinMatch ? '#fef08a' : ''};">
+                      ${isAdmin
+                        ? `<select style="width:100%; padding:4px 6px; border:1.5px solid ${isFinMatch ? '#d97706' : '#cbd5e1'}; border-radius:5px; text-align:center; font-weight:${isFinMatch ? '800' : '600'}; background:${isFinMatch ? '#fef08a' : 'white'}; cursor:pointer;" onchange="updateRoulatieRow(${idx}, 'ktoFinales', this.value)">${buildRoulatieYearOptions(r.ktoFinales || '')}</select>`
+                        : `<strong>${r.ktoFinales || ''}</strong>`}
+                    </td>
                     ${isAdmin ? `<td style="text-align:center;"><button class="btn btn-sm" style="color:#dc2626; padding:1px 5px;" onclick="removeRoulatieRow(${idx})">&times;</button></td>` : ''}
                   </tr>
                 `;
@@ -3739,6 +3762,7 @@ async function resetZomerprogrammaForSeason() {
 async function updateRoulatieRow(idx, field, val) {
   if (!currentUser) return;
   appData.roulatieschema[idx][field] = val.trim();
+  if (field !== 'club') renderReglementen();
   await saveState();
 }
 
@@ -4022,17 +4046,15 @@ function printReglementenPdf(mode) {
       <table class="pdf-ref-table">
         <thead>
           <tr>
-            <th>Vereniging</th>
-            <th style="text-align:center; width:160px;">LVC SEN &amp; JUN</th>
-            <th style="text-align:center; width:160px;">KTO comp &amp; cup</th>
-            <th style="text-align:center; width:160px;">KTO Cup-Finales</th>
+            <th>Vereniging / Baan</th>
+            <th style="text-align:center; width:180px;">KTO comp &amp; cup</th>
+            <th style="text-align:center; width:180px;">KTO Cup-Finales</th>
           </tr>
         </thead>
         <tbody>
           ${rList.map(r => `
             <tr>
               <td><strong>${r.club}</strong></td>
-              <td style="text-align:center;">${r.lvc || ''}</td>
               <td style="text-align:center;">${r.ktoCompCup || ''}</td>
               <td style="text-align:center;">${r.ktoFinales || ''}</td>
             </tr>
