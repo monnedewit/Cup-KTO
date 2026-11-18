@@ -1277,7 +1277,7 @@ async function addNewClub() {
 
 async function removeClub(name) {
   if (!currentUser) return;
-  if (confirm(\`Vereniging "\${name}" verwijderen uit de keuzelijst?\`)) {
+  if (confirm(`Vereniging "${name}" verwijderen uit de keuzelijst?`)) {
     appData.clubs = (appData.clubs || DEFAULT_CLUBS).filter(c => c !== name);
     lotingState.selectedClubs = (lotingState.selectedClubs || []).filter(c => c !== name);
     await saveState();
@@ -1521,7 +1521,7 @@ function renderSenioren() {
               <th>Wed 2 (Th - Uit)</th>
               <th>Status / Beslissing</th>
               <th>Winnaar</th>
-              ${compKey === 'veteranen' ? '<th>Scheidsrechter</th>' : ''}
+              <th>Scheidsrechter</th>
             </tr>
           </thead>
           <tbody>
@@ -1868,7 +1868,7 @@ function renderPouleCompetition(compKey) {
               <th>Wed 2 (Th - Uit)</th>
               <th>Status</th>
               <th>Winnaar</th>
-              ${compKey === 'veteranen' ? '<th>Scheidsrechter</th>' : ''}
+              <th>Scheidsrechter</th>
             </tr>
           </thead>
           <tbody>
