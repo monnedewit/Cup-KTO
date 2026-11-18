@@ -916,7 +916,15 @@ function createDefaultZomerprogramma(seasonLabel) {
     return d.toISOString().slice(0, 10);
   }
 
-  // Dynamisch opgebouwd speelschema vanaf week 16 (half april) dat feestdagen op wo/do/zo automatisch overslaat!
+  const junQueue = [
+    "Jeugd Poule R1",
+    "Jeugd Poule R2",
+    "Jeugd Poule R3",
+    "Jeugd Poule Beslissing",
+    "Jeugd Halve Finale 1",
+    "Jeugd Halve Finale 2",
+    "Jeugd HF Beslissing"
+  ];
   const vetQueue = [
     "Veteranen R1-1",
     "Veteranen R1-2",
@@ -941,6 +949,7 @@ function createDefaultZomerprogramma(seasonLabel) {
     "Senioren HF beslissing"
   ];
 
+  let junIdx = 0;
   let vetIdx = 0;
   let senIdx = 0;
   let finalScheduled = false;
@@ -957,7 +966,6 @@ function createDefaultZomerprogramma(seasonLabel) {
     const sat = new Date(mon); sat.setUTCDate(mon.getUTCDate() + 5);
     const zo = new Date(mon); zo.setUTCDate(mon.getUTCDate() + 6);
 
-    // Verzamel alle feestdagen in deze week (ma t/m zo)
     const weekNotes = [];
     [mon, tue, wo, doD, fri, sat, zo].forEach(d => {
       const hName = holidays[fmtIso(d)];
@@ -965,15 +973,24 @@ function createDefaultZomerprogramma(seasonLabel) {
     });
     if (wk === 18) weekNotes.push("Mei-vakantie");
 
+    const maHol = holidays[fmtIso(mon)];
     const woHol = holidays[fmtIso(wo)];
     const doHol = holidays[fmtIso(doD)];
     const zoHol = holidays[fmtIso(zo)];
 
+    let junTask = "-";
     let vetTask = "-";
     let senTask = "-";
     let zonTask = "-";
 
     if (wk >= 16) {
+      // Maandag (Junioren)
+      if (maHol) {
+        junTask = `${maHol.replace(' (ma - Jeugd)', '')} (geen wed.)`;
+      } else if (junIdx < junQueue.length) {
+        junTask = junQueue[junIdx++];
+      }
+
       // Woensdag (Veteranen)
       if (woHol) {
         vetTask = `${woHol} (geen wed.)`;
@@ -988,8 +1005,8 @@ function createDefaultZomerprogramma(seasonLabel) {
         senTask = senQueue[senIdx++];
       }
 
-      // Zondag (Cupfinales zodra beide halve finales zijn afgerond, niet op 1e Paasdag of 1e Pinksterdag)
-      if (!finalScheduled && vetIdx >= vetQueue.length && senIdx >= senQueue.length) {
+      // Zondag (Cupfinales)
+      if (!finalScheduled && vetIdx >= vetQueue.length && senIdx >= senQueue.length && junIdx >= junQueue.length) {
         if (zoHol) {
           zonTask = `${zoHol} (geen finale)`;
         } else {
@@ -999,13 +1016,16 @@ function createDefaultZomerprogramma(seasonLabel) {
       } else if (zoHol) {
         zonTask = zoHol;
       }
-    } else if (zoHol) {
-      zonTask = zoHol;
+    } else {
+      if (maHol) junTask = maHol.replace(' (ma - Jeugd)', '');
+      if (zoHol) zonTask = zoHol;
     }
 
     rows.push({
       week: "Week " + wk,
       note: weekNotes.join(" • "),
+      maDate: fmt(mon),
+      junTask,
       woDate: fmt(wo),
       vetTask,
       doDate: fmt(doD),
@@ -1019,7 +1039,23 @@ function createDefaultZomerprogramma(seasonLabel) {
 
 function buildZomerTaskOptions(type, currentVal) {
   let opts = ["-"];
-  if (type === "vet") {
+  if (type === "jun") {
+    opts = [
+      "-",
+      "Jeugd Poule R1",
+      "Jeugd Poule R2",
+      "Jeugd Poule R3",
+      "Jeugd Poule Beslissing",
+      "Jeugd Halve Finale 1",
+      "Jeugd Halve Finale 2",
+      "Jeugd HF Beslissing",
+      "2e Paasdag (geen wed.)",
+      "2e Pinksterdag (geen wed.)",
+      "Koningsdag (geen wed.)",
+      "Bevrijdingsdag (5 mei) (geen wed.)",
+      "Inhaal / Beslissing"
+    ];
+  } else if (type === "vet") {
     opts = [
       "-",
       "Bevrijdingsdag (5 mei) (geen wed.)",
@@ -1139,6 +1175,12 @@ function ensureSeasonExtensions(dataObj, seasonLabel) {
   }
   if (!Array.isArray(dataObj.zomerprogramma)) {
     dataObj.zomerprogramma = createDefaultZomerprogramma(seasonLabel);
+  } else {
+    const defZp = createDefaultZomerprogramma(seasonLabel);
+    dataObj.zomerprogramma.forEach((z, idx) => {
+      if (!z.maDate) z.maDate = defZp[idx] ? defZp[idx].maDate : "-";
+      if (!z.junTask) z.junTask = defZp[idx] ? defZp[idx].junTask : "-";
+    });
   }
   if (!dataObj.inviteMeta) {
     dataObj.inviteMeta = {
@@ -3452,28 +3494,32 @@ function renderReglementen() {
         <table class="data-table">
           <thead>
             <tr>
-              <th style="width:82px;">Week</th>
-              <th style="width:115px;">Bijzonderheid</th>
-              <th style="width:72px;">Woensdag</th>
+              <th style="width:74px;">Week</th>
+              <th style="width:110px;">Bijzonderheid</th>
+              <th style="width:66px;">Maandag</th>
+              <th>⚡ Programma Junioren (Ma)</th>
+              <th style="width:66px;">Woensdag</th>
               <th>🥇 Programma Veteranen (Wo)</th>
-              <th style="width:72px;">Donderdag</th>
+              <th style="width:66px;">Donderdag</th>
               <th>🏆 Programma Senioren (Do)</th>
-              <th style="width:72px;">Zondag</th>
-              <th>⚡ / 🏆 Zondag (Jeugd / Finales)</th>
-              ${isAdmin ? '<th style="width:36px;"></th>' : ''}
+              <th style="width:66px;">Zondag</th>
+              <th>🏆 Zondag (Finales)</th>
+              ${isAdmin ? '<th style="width:34px;"></th>' : ''}
             </tr>
           </thead>
           <tbody>
             ${(appData.zomerprogramma || []).map((z, idx) => `
               <tr style="${z.zonTask && z.zonTask !== '-' ? 'background:#fefce8;' : ''}">
                 <td><strong>${isAdmin ? `<input type="text" value="${z.week}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; font-weight:800;" onchange="updateZomerRow(${idx}, 'week', this.value)">` : z.week}</strong></td>
-                <td>${isAdmin ? `<input type="text" value="${z.note || ''}" placeholder="-" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.76rem;" onchange="updateZomerRow(${idx}, 'note', this.value)">` : (z.note || '')}</td>
-                <td><strong>${isAdmin ? `<input type="text" value="${z.woDate}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateZomerRow(${idx}, 'woDate', this.value)">` : z.woDate}</strong></td>
-                <td>${isAdmin ? `<select style="width:100%; padding:3px 5px; border:1px solid #cbd5e1; border-radius:4px; font-weight:${z.vetTask !== '-' ? '700' : '400'}; background:${z.vetTask !== '-' ? '#f0fdf4' : 'white'};" onchange="updateZomerRow(${idx}, 'vetTask', this.value)">${buildZomerTaskOptions('vet', z.vetTask)}</select>` : z.vetTask}</td>
-                <td><strong>${isAdmin ? `<input type="text" value="${z.doDate}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateZomerRow(${idx}, 'doDate', this.value)">` : z.doDate}</strong></td>
-                <td>${isAdmin ? `<select style="width:100%; padding:3px 5px; border:1px solid #cbd5e1; border-radius:4px; font-weight:${z.senTask !== '-' ? '700' : '400'}; background:${z.senTask !== '-' ? '#eff6ff' : 'white'};" onchange="updateZomerRow(${idx}, 'senTask', this.value)">${buildZomerTaskOptions('sen', z.senTask)}</select>` : z.senTask}</td>
-                <td><strong>${isAdmin ? `<input type="text" value="${z.zoDate}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateZomerRow(${idx}, 'zoDate', this.value)">` : z.zoDate}</strong></td>
-                <td>${isAdmin ? `<select style="width:100%; padding:3px 5px; border:1px solid #cbd5e1; border-radius:4px; font-weight:${z.zonTask !== '-' ? '800' : '400'}; background:${z.zonTask !== '-' ? '#fef3c7' : 'white'};" onchange="updateZomerRow(${idx}, 'zonTask', this.value)">${buildZomerTaskOptions('zon', z.zonTask)}</select>` : z.zonTask}</td>
+                <td>${isAdmin ? `<input type="text" value="${z.note || ''}" placeholder="-" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.74rem;" onchange="updateZomerRow(${idx}, 'note', this.value)">` : (z.note || '')}</td>
+                <td><strong>${isAdmin ? `<input type="text" value="${z.maDate || '-'}" style="width:100%; padding:2px 3px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateZomerRow(${idx}, 'maDate', this.value)">` : (z.maDate || '-')}</strong></td>
+                <td>${isAdmin ? `<select style="width:100%; padding:3px 4px; border:1px solid #cbd5e1; border-radius:4px; font-weight:${z.junTask && z.junTask !== '-' ? '700' : '400'}; background:${z.junTask && z.junTask !== '-' ? '#fef3c7' : 'white'};" onchange="updateZomerRow(${idx}, 'junTask', this.value)">${buildZomerTaskOptions('jun', z.junTask || '-')}</select>` : (z.junTask || '-')}</td>
+                <td><strong>${isAdmin ? `<input type="text" value="${z.woDate}" style="width:100%; padding:2px 3px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateZomerRow(${idx}, 'woDate', this.value)">` : z.woDate}</strong></td>
+                <td>${isAdmin ? `<select style="width:100%; padding:3px 4px; border:1px solid #cbd5e1; border-radius:4px; font-weight:${z.vetTask !== '-' ? '700' : '400'}; background:${z.vetTask !== '-' ? '#f0fdf4' : 'white'};" onchange="updateZomerRow(${idx}, 'vetTask', this.value)">${buildZomerTaskOptions('vet', z.vetTask)}</select>` : z.vetTask}</td>
+                <td><strong>${isAdmin ? `<input type="text" value="${z.doDate}" style="width:100%; padding:2px 3px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateZomerRow(${idx}, 'doDate', this.value)">` : z.doDate}</strong></td>
+                <td>${isAdmin ? `<select style="width:100%; padding:3px 4px; border:1px solid #cbd5e1; border-radius:4px; font-weight:${z.senTask !== '-' ? '700' : '400'}; background:${z.senTask !== '-' ? '#eff6ff' : 'white'};" onchange="updateZomerRow(${idx}, 'senTask', this.value)">${buildZomerTaskOptions('sen', z.senTask)}</select>` : z.senTask}</td>
+                <td><strong>${isAdmin ? `<input type="text" value="${z.zoDate}" style="width:100%; padding:2px 3px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateZomerRow(${idx}, 'zoDate', this.value)">` : z.zoDate}</strong></td>
+                <td>${isAdmin ? `<select style="width:100%; padding:3px 4px; border:1px solid #cbd5e1; border-radius:4px; font-weight:${z.zonTask !== '-' ? '800' : '400'}; background:${z.zonTask !== '-' ? '#fef08a' : 'white'};" onchange="updateZomerRow(${idx}, 'zonTask', this.value)">${buildZomerTaskOptions('zon', z.zonTask)}</select>` : z.zonTask}</td>
                 ${isAdmin ? `<td style="text-align:center;"><button class="btn btn-sm" style="color:#dc2626; padding:1px 5px;" onclick="removeZomerWeekRow(${idx})">&times;</button></td>` : ''}
               </tr>
             `).join("")}
@@ -3577,7 +3623,7 @@ async function updateInviteMeta(field, val) {
 async function updateZomerRow(idx, field, val) {
   if (!currentUser) return;
   appData.zomerprogramma[idx][field] = val.trim();
-  if (["vetTask", "senTask", "zonTask"].includes(field)) renderReglementen();
+  if (["junTask", "vetTask", "senTask", "zonTask"].includes(field)) renderReglementen();
   await saveState();
 }
 
@@ -3586,6 +3632,8 @@ async function addZomerWeekRow() {
   appData.zomerprogramma.push({
     week: "Week " + (14 + appData.zomerprogramma.length),
     note: "",
+    maDate: "-",
+    junTask: "-",
     woDate: "-",
     vetTask: "-",
     doDate: "-",
@@ -3715,11 +3763,13 @@ function printReglementenPdf(mode) {
     const formatCellText = (raw) => {
       if (!raw || raw === "-") return "";
       return raw
+        .replace(/^Jeugd\s+/i, "")
         .replace(/^Veteranen\s+/i, "")
         .replace(/^Senioren\s+/i, "")
         .replace(/Bevrijdingsdag/gi, "Bevrijdings-dag")
         .replace(/Koningsdag/gi, "Konings-dag")
         .replace(/Pinksterdag/gi, "Pinkster-dag")
+        .replace(/Paasdag/gi, "Paas-dag")
         .replace(/Kwartfinale/gi, "Kwart-finale")
         .replace(/Cupfinales/gi, "Cup-finales");
     };
@@ -3729,7 +3779,7 @@ function printReglementenPdf(mode) {
         <div>
           <h2>📆 ZOMERPROGRAMMA WEDSTRIJDDAGEN KTO CUP ${activeSeason}</h2>
           <div style="font-size:0.78rem; color:#475569; font-weight:700; margin-top:2px;">
-            Klootschietersbond Twente Oost &bull; Overzicht per week (Woensdag Veteranen &bull; Donderdag Senioren &bull; Zondag Finales)
+            Klootschietersbond Twente Oost &bull; Maandag Junioren &bull; Woensdag Veteranen &bull; Donderdag Senioren &bull; Zondag Finales
           </div>
         </div>
         <div class="pdf-meta-right">
@@ -3741,20 +3791,39 @@ function printReglementenPdf(mode) {
       <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:0.64rem; text-align:center;">
         <thead>
           <tr>
-            <th style="width:62px; background:#0f5132; color:white; border:1px solid #334155; padding:5px 4px; text-align:left; font-size:0.7rem;">Week</th>
+            <th style="width:62px; background:#0f5132; color:white; border:1px solid #334155; padding:4px 4px; text-align:left; font-size:0.68rem;">Week</th>
             ${zList.map(z => `
               <th style="background:#0f5132; color:white; border:1px solid #334155; padding:4px 2px; font-weight:900; vertical-align:top; overflow-wrap:break-word; word-break:break-word;">
-                <div style="font-size:0.74rem;">${z.week.replace('Week ', '')}</div>
-                ${z.note ? `<div style="font-size:0.5rem; font-weight:700; color:#fef08a; line-height:1.12; margin-top:2px;">${formatCellText(z.note)}</div>` : ''}
+                <div style="font-size:0.72rem;">${z.week.replace('Week ', '')}</div>
+                ${z.note ? `<div style="font-size:0.49rem; font-weight:700; color:#fef08a; line-height:1.1; margin-top:1px;">${formatCellText(z.note)}</div>` : ''}
               </th>
             `).join("")}
           </tr>
         </thead>
         <tbody>
-          <!-- RIJ 1: WOENSDAG (VETERANEN) -->
+          <!-- RIJ 1: MAANDAG (JUNIOREN) -->
           <tr>
-            <td style="background:#f1f5f9; border:1px solid #475569; padding:6px 4px; font-weight:900; text-align:left; color:#0f5132; font-size:0.68rem;">
-              Woensdag<br><span style="font-size:0.56rem; font-weight:600; color:#475569;">Veteranen</span>
+            <td style="background:#f1f5f9; border:1px solid #475569; padding:5px 4px; font-weight:900; text-align:left; color:#92400e; font-size:0.66rem;">
+              Maandag<br><span style="font-size:0.55rem; font-weight:600; color:#475569;">Junioren</span>
+            </td>
+            ${zList.map(z => {
+              const hasTask = z.junTask && z.junTask !== "-";
+              const isHol = z.junTask && (z.junTask.includes("geen wed") || z.junTask.includes("Paas") || z.junTask.includes("Pinkster"));
+              const bg = isHol ? "#fee2e2" : (hasTask ? "#fef3c7" : "#ffffff");
+              const txt = formatCellText(z.junTask);
+              return `
+                <td style="border:1px solid #475569; padding:3px 2px; vertical-align:top; background:${bg}; height:56px; overflow-wrap:break-word; word-break:break-word;">
+                  <div style="font-weight:900; font-size:0.68rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:2px; margin-bottom:2px;">${z.maDate || ''}</div>
+                  <div style="font-weight:700; font-size:0.54rem; line-height:1.12; color:${isHol ? '#991b1b' : '#78350f'};">${txt}</div>
+                </td>
+              `;
+            }).join("")}
+          </tr>
+
+          <!-- RIJ 2: WOENSDAG (VETERANEN) -->
+          <tr>
+            <td style="background:#f1f5f9; border:1px solid #475569; padding:5px 4px; font-weight:900; text-align:left; color:#0f5132; font-size:0.66rem;">
+              Woensdag<br><span style="font-size:0.55rem; font-weight:600; color:#475569;">Veteranen</span>
             </td>
             ${zList.map(z => {
               const hasTask = z.vetTask && z.vetTask !== "-";
@@ -3762,18 +3831,18 @@ function printReglementenPdf(mode) {
               const bg = isHol ? "#fee2e2" : (hasTask ? "#dcfce7" : "#ffffff");
               const txt = formatCellText(z.vetTask);
               return `
-                <td style="border:1px solid #475569; padding:4px 2px; vertical-align:top; background:${bg}; height:74px; overflow-wrap:break-word; word-break:break-word;">
-                  <div style="font-weight:900; font-size:0.7rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:2px; margin-bottom:3px;">${z.woDate}</div>
-                  <div style="font-weight:700; font-size:0.56rem; line-height:1.15; color:${isHol ? '#991b1b' : '#065f46'};">${txt}</div>
+                <td style="border:1px solid #475569; padding:3px 2px; vertical-align:top; background:${bg}; height:56px; overflow-wrap:break-word; word-break:break-word;">
+                  <div style="font-weight:900; font-size:0.68rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:2px; margin-bottom:2px;">${z.woDate}</div>
+                  <div style="font-weight:700; font-size:0.54rem; line-height:1.12; color:${isHol ? '#991b1b' : '#065f46'};">${txt}</div>
                 </td>
               `;
             }).join("")}
           </tr>
 
-          <!-- RIJ 2: DONDERDAG (SENIOREN) -->
+          <!-- RIJ 3: DONDERDAG (SENIOREN) -->
           <tr>
-            <td style="background:#f1f5f9; border:1px solid #475569; padding:6px 4px; font-weight:900; text-align:left; color:#1e40af; font-size:0.68rem;">
-              Donderdag<br><span style="font-size:0.56rem; font-weight:600; color:#475569;">Senioren</span>
+            <td style="background:#f1f5f9; border:1px solid #475569; padding:5px 4px; font-weight:900; text-align:left; color:#1e40af; font-size:0.66rem;">
+              Donderdag<br><span style="font-size:0.55rem; font-weight:600; color:#475569;">Senioren</span>
             </td>
             ${zList.map(z => {
               const hasTask = z.senTask && z.senTask !== "-";
@@ -3781,18 +3850,18 @@ function printReglementenPdf(mode) {
               const bg = isHol ? "#fee2e2" : (hasTask ? "#dbeafe" : "#ffffff");
               const txt = formatCellText(z.senTask);
               return `
-                <td style="border:1px solid #475569; padding:4px 2px; vertical-align:top; background:${bg}; height:74px; overflow-wrap:break-word; word-break:break-word;">
-                  <div style="font-weight:900; font-size:0.7rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:2px; margin-bottom:3px;">${z.doDate}</div>
-                  <div style="font-weight:700; font-size:0.56rem; line-height:1.15; color:${isHol ? '#991b1b' : '#1e3a8a'};">${txt}</div>
+                <td style="border:1px solid #475569; padding:3px 2px; vertical-align:top; background:${bg}; height:56px; overflow-wrap:break-word; word-break:break-word;">
+                  <div style="font-weight:900; font-size:0.68rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:2px; margin-bottom:2px;">${z.doDate}</div>
+                  <div style="font-weight:700; font-size:0.54rem; line-height:1.12; color:${isHol ? '#991b1b' : '#1e3a8a'};">${txt}</div>
                 </td>
               `;
             }).join("")}
           </tr>
 
-          <!-- RIJ 3: ZONDAG (CUPFINALES / JEUGD) -->
+          <!-- RIJ 4: ZONDAG (CUPFINALES) -->
           <tr>
-            <td style="background:#f1f5f9; border:1px solid #475569; padding:6px 4px; font-weight:900; text-align:left; color:#92400e; font-size:0.68rem;">
-              Zondag<br><span style="font-size:0.56rem; font-weight:600; color:#475569;">Finales / Jeugd</span>
+            <td style="background:#f1f5f9; border:1px solid #475569; padding:5px 4px; font-weight:900; text-align:left; color:#92400e; font-size:0.66rem;">
+              Zondag<br><span style="font-size:0.55rem; font-weight:600; color:#475569;">Finales</span>
             </td>
             ${zList.map(z => {
               const hasTask = z.zonTask && z.zonTask !== "-";
@@ -3800,9 +3869,9 @@ function printReglementenPdf(mode) {
               const bg = isFin ? "#fef08a" : (hasTask ? "#fef3c7" : "#ffffff");
               const txt = formatCellText(z.zonTask);
               return `
-                <td style="border:1px solid #475569; padding:4px 2px; vertical-align:top; background:${bg}; height:62px; overflow-wrap:break-word; word-break:break-word;">
-                  <div style="font-weight:900; font-size:0.7rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:2px; margin-bottom:3px;">${z.zoDate}</div>
-                  <div style="font-weight:800; font-size:0.56rem; line-height:1.15; color:#92400e;">${txt}</div>
+                <td style="border:1px solid #475569; padding:3px 2px; vertical-align:top; background:${bg}; height:50px; overflow-wrap:break-word; word-break:break-word;">
+                  <div style="font-weight:900; font-size:0.68rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:2px; margin-bottom:2px;">${z.zoDate}</div>
+                  <div style="font-weight:800; font-size:0.54rem; line-height:1.12; color:#92400e;">${txt}</div>
                 </td>
               `;
             }).join("")}
@@ -3810,8 +3879,8 @@ function printReglementenPdf(mode) {
         </tbody>
       </table>
 
-      <div class="pdf-rules-box" style="margin-top:10px; padding:7px 12px; font-size:0.72rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
-        <span><strong>Aanvangstijden:</strong> Vóór 1 mei om 19:00 uur &bull; Na 1 mei: Veteranen 19:15 uur en Senioren 19:30 uur &bull; Junioren maandag 19:00 uur.</span>
+      <div class="pdf-rules-box" style="margin-top:8px; padding:6px 10px; font-size:0.7rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+        <span><strong>Aanvangstijden:</strong> Junioren maandag 19:00 uur &bull; Vóór 1 mei: Vet &amp; Sen 19:00 uur &bull; Na 1 mei: Veteranen 19:15 uur en Senioren 19:30 uur.</span>
         <span><strong>Neutrale baan:</strong> ${fd.neutralVenue} &bull; <strong>Finalebaan:</strong> ${fd.venue}</span>
       </div>
     `;
