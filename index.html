@@ -622,11 +622,7 @@ function buildVeteranenPoulesForCount(teamCount, existingPoules) {
 
 
 function buildJeugdStructureForCount(compKey, teamCount, existingData) {
-  const count = Math.max(4, Math.min(8, parseInt(teamCount) || 6));
-  const sizeA = Math.ceil(count / 2);
-  const sizeB = Math.floor(count / 2);
-  const sizes = [sizeA, sizeB];
-  const names = ["Poule A", "Poule B"];
+  const count = Math.max(3, Math.min(8, parseInt(teamCount) || 6));
 
   const oldPoulesMap = {};
   if (existingData && Array.isArray(existingData.poules)) {
@@ -636,6 +632,57 @@ function buildJeugdStructureForCount(compKey, teamCount, existingData) {
   if (existingData && Array.isArray(existingData.knockout)) {
     existingData.knockout.forEach(m => { oldKOMap[m.id] = m; });
   }
+
+  const prefix = compKey === "jeugdCup" ? "jc" : (compKey === "jeugdA" ? "ja" : "jb");
+
+  // Speciaal geval: 3 teams = 1 poule (Poule A) -> direct Finale (1e Poule A - 2e Poule A)
+  if (count === 3) {
+    const oldA = oldPoulesMap["Poule A"] || {};
+    const teams = [
+      (oldA.teams && oldA.teams[0]) ? oldA.teams[0] : "",
+      (oldA.teams && oldA.teams[1]) ? oldA.teams[1] : "",
+      (oldA.teams && oldA.teams[2]) ? oldA.teams[2] : ""
+    ];
+    const games = [];
+    for (let g = 0; g < 3; g++) {
+      const oldG = (oldA.games && oldA.games[g]) ? oldA.games[g] : {};
+      games.push({
+        label: "Wedstrijd " + (g + 1),
+        p1: oldG.p1 ?? 0,
+        p2: oldG.p2 ?? 0,
+        p3: oldG.p3 ?? 0,
+        p4: 0
+      });
+    }
+    const oldFin = oldKOMap[prefix + "_fin"] || {};
+    return {
+      teamCount: 3,
+      poules: [{
+        name: "Poule A",
+        slotNrs: [1, 2, 3],
+        teams,
+        games,
+        decWinner: oldA.decWinner ?? ""
+      }],
+      knockout: [{
+        id: prefix + "_fin",
+        round: "Finale",
+        label: "FINALE (1e Poule A - 2e Poule A)",
+        homeRef: "Poule A:1",
+        awayRef: "Poule A:2",
+        sc1H: oldFin.sc1H ?? 0,
+        sc1A: oldFin.sc1A ?? 0,
+        sc2H: null,
+        sc2A: null,
+        decWinner: oldFin.decWinner ?? ""
+      }]
+    };
+  }
+
+  const sizeA = Math.ceil(count / 2);
+  const sizeB = Math.floor(count / 2);
+  const sizes = [sizeA, sizeB];
+  const names = ["Poule A", "Poule B"];
 
   let slotCounter = 1;
   const poules = names.map((pName, idx) => {
@@ -668,7 +715,6 @@ function buildJeugdStructureForCount(compKey, teamCount, existingData) {
     };
   });
 
-  const prefix = compKey === "jeugdCup" ? "jc" : (compKey === "jeugdA" ? "ja" : "jb");
   const knockout = [];
 
   const oldSf1 = oldKOMap[prefix + "_sf1"] || {};
@@ -810,7 +856,7 @@ function createEmptySeasonTemplate(seasonLabel) {
       };
     })(),
     jeugdB: (() => {
-      const b = buildJeugdStructureForCount("jeugdB", 4, null);
+      const b = buildJeugdStructureForCount("jeugdB", 3, null);
       return {
         title: "Jeugd B Klasse",
         teamCount: b.teamCount,
@@ -1048,14 +1094,65 @@ function openClubsModal() {
 }
 
 function renderClubsModalList() {
-  const clubs = (appData.clubs || DEFAULT_CLUBS).sort();
+  const clubs = [...(appData.clubs || DEFAULT_CLUBS)].sort();
   const container = document.getElementById("clubsListContainer");
-  container.innerHTML = clubs.map((c, idx) => `
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; border-bottom:1px solid #e2e8f0; background:white;">
-      <span style="font-weight:700; font-size:0.82rem;">${c}</span>
-      <button class="btn btn-sm" style="color:#dc2626; padding:1px 6px;" onclick="removeClub('${c.replace(/'/g, "\'")}')">&times;</button>
-    </div>
-  `).join("");
+  container.innerHTML = clubs.map((c, idx) => {
+    const safeC = c.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; padding:5px 8px; border-bottom:1px solid #e2e8f0; background:white;">
+        <span style="font-weight:700; font-size:0.83rem; flex:1;">${c}</span>
+        <button class="btn btn-sm" style="padding:2px 7px; font-size:0.74rem;" title="Naam wijzigen" onclick="promptRenameClub('${safeC}')">✏️ Wijzig</button>
+        <button class="btn btn-sm" style="color:#dc2626; padding:2px 7px; font-size:0.74rem;" title="Verwijderen" onclick="removeClub('${safeC}')">🗑️</button>
+      </div>
+    `;
+  }).join("");
+}
+
+async function promptRenameClub(oldName) {
+  if (!currentUser) return;
+  const newName = prompt("Wijzig naam van vereniging / combinatieteam:", oldName);
+  if (!newName || newName.trim() === "" || newName.trim() === oldName) return;
+  const cleanNew = newName.trim();
+
+  if (!appData.clubs) appData.clubs = [...DEFAULT_CLUBS];
+  const idx = appData.clubs.indexOf(oldName);
+  if (idx >= 0) {
+    appData.clubs[idx] = cleanNew;
+  } else if (!appData.clubs.includes(cleanNew)) {
+    appData.clubs.push(cleanNew);
+  }
+  appData.clubs.sort();
+
+  // Vervang ook overal in het actieve seizoen waar deze naam al was ingevuld
+  if (appData.senioren) {
+    Object.keys(appData.senioren.slots || {}).forEach(k => {
+      if (appData.senioren.slots[k] === oldName) appData.senioren.slots[k] = cleanNew;
+    });
+    (appData.senioren.matches || []).forEach(m => {
+      if (m.ref === oldName) m.ref = cleanNew;
+      if (m.decWinner === oldName) m.decWinner = cleanNew;
+    });
+  }
+  ["veteranen", "jeugdCup", "jeugdA", "jeugdB"].forEach(ck => {
+    const c = appData[ck];
+    if (!c) return;
+    (c.poules || []).forEach(p => {
+      p.teams = (p.teams || []).map(t => t === oldName ? cleanNew : t);
+      if (p.ref === oldName) p.ref = cleanNew;
+      if (p.decWinner === oldName) p.decWinner = cleanNew;
+    });
+    (c.knockout || []).forEach(m => {
+      if (m.ref === oldName) m.ref = cleanNew;
+      if (m.decWinner === oldName) m.decWinner = cleanNew;
+    });
+  });
+  if (Array.isArray(lotingState.selectedClubs)) {
+    lotingState.selectedClubs = lotingState.selectedClubs.map(c => c === oldName ? cleanNew : c);
+  }
+
+  await saveState();
+  renderClubsModalList();
+  renderCurrentTab();
 }
 
 async function addNewClub() {
@@ -1076,8 +1173,9 @@ async function addNewClub() {
 
 async function removeClub(name) {
   if (!currentUser) return;
-  if (confirm(`Vereniging "${name}" verwijderen uit de keuzelijst?`)) {
+  if (confirm(\`Vereniging "\${name}" verwijderen uit de keuzelijst?\`)) {
     appData.clubs = (appData.clubs || DEFAULT_CLUBS).filter(c => c !== name);
+    lotingState.selectedClubs = (lotingState.selectedClubs || []).filter(c => c !== name);
     await saveState();
     renderClubsModalList();
     renderCurrentTab();
@@ -1085,9 +1183,21 @@ async function removeClub(name) {
 }
 
 function switchTab(tab) {
+  const prevTab = currentTab;
   currentTab = tab;
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   document.getElementById("tab-" + tab).classList.add("active");
+  if (tab === "loting") {
+    const mapTabToCat = {
+      "senioren": "senioren",
+      "veteranen": "veteranen",
+      "jeugd-cup": "jeugdCup",
+      "jeugd-a": "jeugdA",
+      "jeugd-b": "jeugdB"
+    };
+    const targetCat = mapTabToCat[prevTab] || lotingState.cat || "senioren";
+    initLotingForCat(targetCat);
+  }
   renderCurrentTab();
 }
 
@@ -1367,7 +1477,8 @@ async function changeSeniorenTeamCount(newCount) {
   appData.senioren.teamCount = built.teamCount;
   appData.senioren.slots = built.slots;
   appData.senioren.matches = built.matches;
-  renderSenioren();
+  if (lotingState.cat === "senioren") initLotingForCat("senioren");
+  renderCurrentTab();
   await saveState();
 }
 
@@ -1502,9 +1613,9 @@ function renderPouleCompetition(compKey) {
             <span style="background:#dcfce7; border:1px solid #86efac; padding:3px 9px; border-radius:6px; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px;">
               <span>Aantal teams:</span>
               <select style="font-weight:800; color:var(--primary); border:1px solid #86efac; border-radius:4px; padding:2px 6px;" onchange="changeJeugdTeamCount('${compKey}', this.value)">
-                ${[4,5,6,7,8].map(n => {
-                  const dist = `${Math.ceil(n/2)}-${Math.floor(n/2)}`;
-                  return `<option value="${n}" ${n === (comp.teamCount || 6) ? 'selected' : ''}>${n} teams (poules: ${dist})</option>`;
+                ${[3,4,5,6,7,8].map(n => {
+                  const dist = n === 3 ? '1 poule van 3' : `poules: ${Math.ceil(n/2)}-${Math.floor(n/2)}`;
+                  return `<option value="${n}" ${n === (comp.teamCount || 6) ? 'selected' : ''}>${n} teams (${dist})</option>`;
                 }).join("")}
               </select>
             </span>
@@ -1718,6 +1829,7 @@ async function changeJeugdTeamCount(compKey, newCount) {
   appData[compKey].teamCount = built.teamCount;
   appData[compKey].poules = built.poules;
   appData[compKey].knockout = built.knockout;
+  if (lotingState.cat === compKey) initLotingForCat(compKey);
   renderCurrentTab();
   await saveState();
 }
@@ -1727,6 +1839,7 @@ async function changeVeteranenTeamCount(newCount) {
   const built = buildVeteranenPoulesForCount(newCount, appData.veteranen.poules);
   appData.veteranen.teamCount = built.teamCount;
   appData.veteranen.poules = built.poules;
+  if (lotingState.cat === "veteranen") initLotingForCat("veteranen");
   renderCurrentTab();
   await saveState();
 }
@@ -2144,14 +2257,27 @@ function renderCuploting() {
       <div class="card-header">
         <div class="card-title">🎲 Digitale Cuploting (${activeSeason}) – Geen papiertjes meer nodig!</div>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <label style="font-weight:800; font-size:0.82rem; color:var(--primary);">Kies categorie:</label>
+          <label style="font-weight:800; font-size:0.82rem; color:var(--primary);">Categorie:</label>
           <select style="padding:5px 10px; border-radius:6px; border:1.5px solid var(--primary); font-weight:800; color:var(--primary);" onchange="changeLotingCategory(this.value)">
-            <option value="senioren" ${lotingState.cat === 'senioren' ? 'selected' : ''}>🏆 Senioren (${appData.senioren.teamCount || 12} teams)</option>
-            <option value="veteranen" ${lotingState.cat === 'veteranen' ? 'selected' : ''}>🥇 Veteranen (${appData.veteranen.teamCount || 12} teams)</option>
-            <option value="jeugdCup" ${lotingState.cat === 'jeugdCup' ? 'selected' : ''}>⚡ Jeugd Cup Klasse (${appData.jeugdCup.teamCount || 6} teams)</option>
-            <option value="jeugdA" ${lotingState.cat === 'jeugdA' ? 'selected' : ''}>🎯 Jeugd A Klasse (${appData.jeugdA.teamCount || 6} teams)</option>
-            <option value="jeugdB" ${lotingState.cat === 'jeugdB' ? 'selected' : ''}>🌱 Jeugd B Klasse (${appData.jeugdB.teamCount || 4} teams)</option>
+            <option value="senioren" ${lotingState.cat === 'senioren' ? 'selected' : ''}>🏆 Senioren</option>
+            <option value="veteranen" ${lotingState.cat === 'veteranen' ? 'selected' : ''}>🥇 Veteranen</option>
+            <option value="jeugdCup" ${lotingState.cat === 'jeugdCup' ? 'selected' : ''}>⚡ Jeugd Cup Klasse</option>
+            <option value="jeugdA" ${lotingState.cat === 'jeugdA' ? 'selected' : ''}>🎯 Jeugd A Klasse</option>
+            <option value="jeugdB" ${lotingState.cat === 'jeugdB' ? 'selected' : ''}>🌱 Jeugd B Klasse</option>
           </select>
+
+          <label style="font-weight:800; font-size:0.82rem; color:var(--primary);">Aantal teams:</label>
+          ${(lotingState.cat === 'senioren' || lotingState.cat === 'veteranen') ? `
+            <select style="padding:5px 10px; border-radius:6px; border:1.5px solid #16a34a; background:#f0fdf4; font-weight:800; color:var(--primary);"
+              onchange="${lotingState.cat === 'senioren' ? 'changeSeniorenTeamCount(this.value)' : 'changeVeteranenTeamCount(this.value)'}">
+              ${[8,9,10,11,12,13,14].map(n => `<option value="${n}" ${n === needed ? 'selected' : ''}>${n} teams</option>`).join("")}
+            </select>
+          ` : `
+            <select style="padding:5px 10px; border-radius:6px; border:1.5px solid #16a34a; background:#f0fdf4; font-weight:800; color:var(--primary);"
+              onchange="changeJeugdTeamCount('${lotingState.cat}', this.value)">
+              ${[3,4,5,6,7,8].map(n => `<option value="${n}" ${n === needed ? 'selected' : ''}>${n} teams</option>`).join("")}
+            </select>
+          `}
         </div>
       </div>
 
@@ -2176,7 +2302,7 @@ function renderCuploting() {
               const isChecked = lotingState.selectedClubs.includes(club);
               return `
                 <label class="club-check-item ${isChecked ? 'checked' : ''}" style="${isDrawingActive ? 'opacity:0.65; pointer-events:none;' : ''}">
-                  <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleLotingClub('${club.replace(/'/g, "\'")}')">
+                  <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleLotingClub('${club.replace(/'/g, "\\'")}')">
                   <span>${club}</span>
                 </label>
               `;
@@ -2196,8 +2322,14 @@ function renderCuploting() {
               ${isComplete ? '🎉 De loting is compleet!' : (isDrawingActive ? `Nog ${lotingState.pot.length} balletje(s) in de trommel` : 'Klaar om te loten')}
             </div>
 
-            <div id="drumBallDisplay" class="drum-ball">
-              ${latestDraw ? `<span style="background:#0f5132; color:white; padding:3px 10px; border-radius:8px; font-size:1rem;">#${latestDraw.slotNr}</span> <span>${latestDraw.club}</span>` : '<span style="color:#64748b; font-size:0.95rem;">Druk op "Start Loting"</span>'}
+            <div id="drumBallDisplay" class="drum-ball" style="cursor:pointer;" onclick="${!isDrawingActive ? 'startLotingPot()' : (!isComplete ? 'drawNextBall(false)' : '')}" title="Klik om te loten">
+              ${latestDraw
+                ? `<span style="background:#0f5132; color:white; padding:3px 10px; border-radius:8px; font-size:1rem;">#${latestDraw.slotNr}</span> <span>${latestDraw.club}</span>`
+                : (isDrawingActive
+                    ? `<span style="color:#0f5132; font-size:0.98rem;">🎱 Trommel gevuld! Klik voor bal #1</span>`
+                    : `<span style="color:#64748b; font-size:0.95rem;">Klik hier of op "Start Loting"</span>`
+                  )
+              }
             </div>
 
             <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px;">
@@ -2298,6 +2430,7 @@ function startLotingPot() {
   lotingState.drawn = [];
   lotingState.lastDrawnIndex = -1;
   renderCuploting();
+  drawNextBall(false);
 }
 
 function drawNextBall(instant = false) {
