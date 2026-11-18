@@ -3471,10 +3471,6 @@ function renderReglementen() {
             <input type="text" value="${meta.deadline}" onchange="updateInviteMeta('deadline', this.value)">
           </div>
           <div class="date-field">
-            <label>🎲 Loting tijdens ALV:</label>
-            <input type="text" value="${meta.lotingMoment}" onchange="updateInviteMeta('lotingMoment', this.value)">
-          </div>
-          <div class="date-field">
             <label>⚖️ Neutrale Baan Beslissingen:</label>
             <select style="width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px; font-size:0.8rem; font-weight:700; color:#1e3a8a; background:white;" onchange="updateFinaledagField('neutralVenue', this.value)">
               ${buildBaanClubOptions(fd.neutralVenue, "-- Kies neutrale baan --")}
