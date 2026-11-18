@@ -332,6 +332,7 @@
       <span id="saveStatus" style="font-size:0.75rem; color:#bbf7d0; font-weight:700;">Verbinden...</span>
       <span class="auth-pill" id="authStatusBadge">Alleen-lezen (Bezoeker)</span>
       <button class="btn btn-sm" id="btnLoginToggle" onclick="handleAuthToggle()">Inloggen Wedstrijdleiding</button>
+      <button class="btn btn-primary btn-sm" id="btnManualSave" style="display:none;" onclick="saveState()">💾 Opslaan</button>
       <button class="btn btn-sm" id="btnManageClubs" style="display:none;" onclick="openClubsModal()">🏢 Verenigingen</button>
       <button class="btn btn-sm btn-accent" onclick="openPdfGenerator()">📄 Ronde PDF / Print</button>
       <button class="btn btn-sm" onclick="exportToExcel()">📥 Excel</button>
@@ -1019,6 +1020,7 @@ function updateAuthUI() {
     btn.innerText = "Uitloggen";
     btnNewS.style.display = "inline-flex";
     btnClubs.style.display = "inline-flex";
+    const btnSave = document.getElementById("btnManualSave"); if (btnSave) btnSave.style.display = "inline-flex";
     btnClear.style.display = "inline-flex";
     const tabLot = document.getElementById("tab-loting");
     if (tabLot) tabLot.style.display = "inline-flex";
@@ -1029,6 +1031,7 @@ function updateAuthUI() {
     btn.innerText = "Inloggen Wedstrijdleiding";
     btnNewS.style.display = "none";
     btnClubs.style.display = "none";
+    const btnSave = document.getElementById("btnManualSave"); if (btnSave) btnSave.style.display = "none";
     btnClear.style.display = "none";
     const tabLot = document.getElementById("tab-loting");
     if (tabLot) tabLot.style.display = "none";
@@ -1166,26 +1169,49 @@ async function clearCurrentSeasonData() {
 }
 
 async function saveState() {
-  if (!currentUser) return;
   const st = document.getElementById("saveStatus");
-  if (st) st.innerText = "Opslaan...";
+  if (!currentUser) {
+    if (st) st.innerText = "⚠️ Niet ingelogd (niet opgeslagen)";
+    return false;
+  }
+  if (st) {
+    st.style.color = "#fef08a";
+    st.innerText = "Opslaan in database...";
+  }
 
   try {
-    const { error } = await supabaseClient
+    const payload = {
+      id: seasonDbKey(activeSeason),
+      data: JSON.parse(JSON.stringify(appData)),
+      updated_at: new Date().toISOString()
+    };
+    const { data, error } = await supabaseClient
       .from("kto_cup_state")
-      .upsert({
-        id: seasonDbKey(activeSeason),
-        data: appData,
-        updated_at: new Date().toISOString()
-      });
+      .upsert(payload, { onConflict: "id" })
+      .select();
 
     if (error) {
-      alert("Opslaan mislukt: " + error.message);
-    } else if (st) {
-      st.innerText = "✓ Opgeslagen (" + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ")";
+      console.error("Supabase save error:", error);
+      if (st) {
+        st.style.color = "#fca5a5";
+        st.innerText = "❌ Fout bij opslaan!";
+      }
+      alert("Opslaan in Supabase mislukt: " + error.message + "\n\nControleer in Supabase of het RLS-beleid van 'kto_cup_state' jouw e-mailadres toestaat.");
+      return false;
+    } else {
+      if (st) {
+        st.style.color = "#bbf7d0";
+        st.innerText = "✓ Opgeslagen (" + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ")";
+      }
+      return true;
     }
   } catch (e) {
-    console.error(e);
+    console.error("Save exception:", e);
+    if (st) {
+      st.style.color = "#fca5a5";
+      st.innerText = "❌ Verbindingsfout";
+    }
+    return false;
   }
 }
 
@@ -2329,9 +2355,16 @@ function getLotingSlotsMeta(cat) {
 function initLotingForCat(cat) {
   lotingState.cat = cat;
   const slotsMeta = getLotingSlotsMeta(cat);
-  const allClubs = [...(appData.clubs || DEFAULT_CLUBS)].sort();
-  // Pre-select first N clubs if empty, or keep valid ones
-  lotingState.selectedClubs = allClubs.slice(0, slotsMeta.length);
+  const fieldMap = { senioren: "sen", veteranen: "vet", jeugdCup: "jCup", jeugdA: "jA", jeugdB: "jB" };
+  const f = fieldMap[cat];
+  const regClubs = (appData.registrations || []).filter(r => r[f]).map(r => r.club);
+
+  if (regClubs.length > 0) {
+    lotingState.selectedClubs = [...regClubs];
+  } else {
+    const allClubs = [...(appData.clubs || DEFAULT_CLUBS)].sort();
+    lotingState.selectedClubs = allClubs.slice(0, slotsMeta.length);
+  }
   lotingState.pot = [];
   lotingState.drawn = [];
   lotingState.isSpinning = false;
@@ -2588,7 +2621,7 @@ function resetLotingDrum() {
 }
 
 async function applyLotingToTournament() {
-  if (!currentUser) return;
+  if (!currentUser) return alert("Log eerst in als wedstrijdleiding.");
   const cat = lotingState.cat;
   if (cat === "senioren") {
     lotingState.drawn.forEach(d => {
