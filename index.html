@@ -848,6 +848,241 @@ function createDefaultFinaledag(seasonLabel) {
   };
 }
 
+
+function calcEasterDate(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function getDutchHolidaysForYear(yr) {
+  const easter = calcEasterDate(yr);
+  const addDays = (d, n) => {
+    const r = new Date(d);
+    r.setUTCDate(r.getUTCDate() + n);
+    return r;
+  };
+  const fmtIso = (d) => d.toISOString().slice(0, 10);
+
+  const easterMon = addDays(easter, 1);
+  const ascension = addDays(easter, 39); // Donderdag Hemelvaart
+  const pentecostSun = addDays(easter, 49); // 1e Pinksterdag (zo)
+  const pentecostMon = addDays(easter, 50); // 2e Pinksterdag (ma)
+
+  let kingsDay = new Date(Date.UTC(yr, 3, 27)); // 27 april
+  if (kingsDay.getUTCDay() === 0) kingsDay = new Date(Date.UTC(yr, 3, 26));
+  const liberationDay = new Date(Date.UTC(yr, 4, 5)); // 5 mei
+
+  const map = {};
+  map[fmtIso(easter)] = "1e Paasdag (zo)";
+  map[fmtIso(easterMon)] = "2e Paasdag (ma - Jeugd)";
+  map[fmtIso(kingsDay)] = "Koningsdag";
+  map[fmtIso(liberationDay)] = "Bevrijdingsdag (5 mei)";
+  map[fmtIso(ascension)] = "Hemelvaart (do)";
+  map[fmtIso(pentecostSun)] = "1e Pinksterdag (zo)";
+  map[fmtIso(pentecostMon)] = "2e Pinksterdag (ma - Jeugd)";
+  return map;
+}
+
+function createDefaultZomerprogramma(seasonLabel) {
+  const yearMatch = (seasonLabel || "2026/2027").match(/20\d{2}/g);
+  const yr = yearMatch ? parseInt(yearMatch[yearMatch.length - 1]) : 2027;
+  const holidays = getDutchHolidaysForYear(yr);
+
+  // Zoek maandag van ISO week 12 van `yr`
+  const jan4 = new Date(Date.UTC(yr, 0, 4));
+  const jan4Day = jan4.getUTCDay() || 7;
+  const week1Mon = new Date(jan4);
+  week1Mon.setUTCDate(jan4.getUTCDate() - jan4Day + 1);
+  const w12Mon = new Date(week1Mon);
+  w12Mon.setUTCDate(week1Mon.getUTCDate() + (11 * 7));
+
+  function fmt(d) {
+    return `${d.getUTCDate()}-${d.getUTCMonth() + 1}`;
+  }
+  function fmtIso(d) {
+    return d.toISOString().slice(0, 10);
+  }
+
+  // Dynamisch opgebouwd speelschema vanaf week 16 (half april) dat feestdagen op wo/do/zo automatisch overslaat!
+  const vetQueue = [
+    "Bevrijdingsdag (5 mei) (geen wed.)",
+      "Koningsdag (geen wed.)",
+      "Veteranen R1-1",
+    "Veteranen R1-2",
+    "Veteranen R1-3",
+    "Veteranen R1 beslissing",
+    "Veteranen Kwartfinale 1",
+    "Veteranen Kwartfinale 2",
+    "Veteranen Kwartfinale beslissing",
+    "Veteranen Halve Finale 1",
+    "Veteranen Halve Finale 2",
+    "Veteranen HF beslissing"
+  ];
+  const senQueue = [
+    "Senioren R1-1",
+    "Senioren R1-2",
+    "Senioren R1 beslissing",
+    "Senioren Kwartfinale 1",
+    "Senioren Kwartfinale 2",
+    "Senioren Kwartfinale beslissing",
+    "Senioren Halve Finale 1",
+    "Senioren Halve Finale 2",
+    "Senioren HF beslissing"
+  ];
+
+  let vetIdx = 0;
+  let senIdx = 0;
+  let finalScheduled = false;
+
+  const rows = [];
+  for (let i = 0; i <= 16; i++) {
+    const wk = 12 + i;
+    const mon = new Date(w12Mon);
+    mon.setUTCDate(w12Mon.getUTCDate() + i * 7);
+    const tue = new Date(mon); tue.setUTCDate(mon.getUTCDate() + 1);
+    const wo = new Date(mon); wo.setUTCDate(mon.getUTCDate() + 2);
+    const doD = new Date(mon); doD.setUTCDate(mon.getUTCDate() + 3);
+    const fri = new Date(mon); fri.setUTCDate(mon.getUTCDate() + 4);
+    const sat = new Date(mon); sat.setUTCDate(mon.getUTCDate() + 5);
+    const zo = new Date(mon); zo.setUTCDate(mon.getUTCDate() + 6);
+
+    // Verzamel alle feestdagen in deze week (ma t/m zo)
+    const weekNotes = [];
+    [mon, tue, wo, doD, fri, sat, zo].forEach(d => {
+      const hName = holidays[fmtIso(d)];
+      if (hName) weekNotes.push(hName);
+    });
+    if (wk === 18) weekNotes.push("Mei-vakantie");
+
+    const woHol = holidays[fmtIso(wo)];
+    const doHol = holidays[fmtIso(doD)];
+    const zoHol = holidays[fmtIso(zo)];
+
+    let vetTask = "-";
+    let senTask = "-";
+    let zonTask = "-";
+
+    if (wk >= 16) {
+      // Woensdag (Veteranen)
+      if (woHol) {
+        vetTask = `${woHol} (geen wed.)`;
+      } else if (vetIdx < vetQueue.length) {
+        vetTask = vetQueue[vetIdx++];
+      }
+
+      // Donderdag (Senioren)
+      if (doHol) {
+        senTask = `${doHol} (geen wed.)`;
+      } else if (senIdx < senQueue.length) {
+        senTask = senQueue[senIdx++];
+      }
+
+      // Zondag (Cupfinales zodra beide halve finales zijn afgerond, niet op 1e Paasdag of 1e Pinksterdag)
+      if (!finalScheduled && vetIdx >= vetQueue.length && senIdx >= senQueue.length) {
+        if (zoHol) {
+          zonTask = `${zoHol} (geen finale)`;
+        } else {
+          zonTask = "🏆 Cupfinales";
+          finalScheduled = true;
+        }
+      } else if (zoHol) {
+        zonTask = zoHol;
+      }
+    } else if (zoHol) {
+      zonTask = zoHol;
+    }
+
+    rows.push({
+      week: "Week " + wk,
+      note: weekNotes.join(" • "),
+      woDate: fmt(wo),
+      vetTask,
+      doDate: fmt(doD),
+      senTask,
+      zoDate: fmt(zo),
+      zonTask
+    });
+  }
+  return rows;
+}
+
+function buildZomerTaskOptions(type, currentVal) {
+  let opts = ["-"];
+  if (type === "vet") {
+    opts = [
+      "-",
+      "Bevrijdingsdag (5 mei) (geen wed.)",
+      "Koningsdag (geen wed.)",
+      "Veteranen R1-1",
+      "Veteranen R1-2",
+      "Veteranen R1-3",
+      "Veteranen R1 beslissing",
+      "Veteranen Kwartfinale 1",
+      "Veteranen Kwartfinale 2",
+      "Veteranen Kwartfinale beslissing",
+      "Veteranen R2-1",
+      "Veteranen R2-2",
+      "Veteranen R2 beslissing",
+      "Veteranen Halve Finale 1",
+      "Veteranen Halve Finale 2",
+      "Veteranen HF beslissing",
+      "Inhaal / Beslissing"
+    ];
+  } else if (type === "sen") {
+    opts = [
+      "-",
+      "Senioren R1-1",
+      "Senioren R1-2",
+      "Senioren R1 beslissing",
+      "Senioren Kwartfinale 1",
+      "Senioren Kwartfinale 2",
+      "Senioren Kwartfinale beslissing",
+      "Senioren R2-1",
+      "Senioren R2-2",
+      "Senioren R2 beslissing",
+      "Senioren Halve Finale 1",
+      "Senioren Halve Finale 2",
+      "Senioren HF beslissing",
+      "Hemelvaart (do) (geen wed.)",
+      "Koningsdag (geen wed.)",
+      "Bevrijdingsdag (5 mei) (geen wed.)",
+      "Inhaal / Beslissing"
+    ];
+  } else {
+    opts = [
+      "-",
+      "Jeugd Poule R1",
+      "Jeugd Poule R2",
+      "Jeugd Poule R3",
+      "Jeugd Poule R4",
+      "Jeugd Halve Finale 1",
+      "Jeugd Halve Finale 2",
+      "Jeugd Beslissing",
+      "🏆 Cupfinales",
+      "1e Paasdag (zo)",
+      "1e Pinksterdag (zo)",
+      "Inhaal / Reserve"
+    ];
+  }
+  if (currentVal && !opts.includes(currentVal)) {
+    opts.splice(1, 0, currentVal);
+  }
+  return opts.map(o => `<option value="${o}" ${o === currentVal ? 'selected' : ''}>${o}</option>`).join("");
+}
+
 function createDefaultWedstrijddagen() {
   return [
     { ronde: "Ronde 1 – Wedstrijd 1", veteranen: "Woensdag (19:00 uur)", senioren: "Donderdag (19:00 uur)", junioren: "Maandag (19:00 uur)" },
@@ -903,6 +1138,9 @@ function ensureSeasonExtensions(dataObj, seasonLabel) {
   }
   if (!Array.isArray(dataObj.wedstrijddagen)) {
     dataObj.wedstrijddagen = createDefaultWedstrijddagen();
+  }
+  if (!Array.isArray(dataObj.zomerprogramma)) {
+    dataObj.zomerprogramma = createDefaultZomerprogramma(seasonLabel);
   }
   if (!dataObj.inviteMeta) {
     dataObj.inviteMeta = {
@@ -1023,6 +1261,7 @@ function createEmptySeasonTemplate(seasonLabel) {
     })),
     finaledag: createDefaultFinaledag(seasonLabel),
     wedstrijddagen: createDefaultWedstrijddagen(),
+    zomerprogramma: createDefaultZomerprogramma(seasonLabel),
     inviteMeta: {
       deadline: "9 maart",
       lotingMoment: "ALV maandagavond in clubgebouw Ons Genoegen",
@@ -3137,6 +3376,7 @@ function renderReglementen() {
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <button class="btn btn-accent btn-sm" onclick="printReglementenPdf('uitnodiging')">🖨️ Uitnodiging PDF</button>
           <button class="btn btn-sm" onclick="printReglementenPdf('speeldagen')">🖨️ Speeldagen PDF</button>
+          <button class="btn btn-sm" onclick="printReglementenPdf('weekkalender')">🖨️ Weekkalender PDF</button>
           <button class="btn btn-sm" onclick="printReglementenPdf('reglementen')">🖨️ Reglementen PDF</button>
         </div>
       </div>
@@ -3198,6 +3438,49 @@ function renderReglementen() {
             ? `<input type="text" value="${appData.reglementenNote || ''}" style="flex:1; padding:4px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.78rem; color:#334155;" onchange="updateReglementenNote(this.value)">`
             : `<span>${appData.reglementenNote || ''}</span>`}
         </div>
+      </div>
+
+      <!-- BLOK 1B: ZOMERPROGRAMMA WEDSTRIJDDAGEN PER WEEK -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px; margin-top:6px;">
+        <h3 style="color:var(--primary); font-size:0.98rem; margin:0;">📆 Zomerprogramma Wedstrijddagen per Week (${activeSeason})</h3>
+        ${isAdmin ? `
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="resetZomerprogrammaForSeason()">🔄 Data berekenen voor ${activeSeason}</button>
+            <button class="btn btn-primary btn-sm" onclick="addZomerWeekRow()">+ Week toevoegen</button>
+          </div>
+        ` : ''}
+      </div>
+      <div style="overflow-x:auto; margin-bottom:18px;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:82px;">Week</th>
+              <th style="width:115px;">Bijzonderheid</th>
+              <th style="width:72px;">Woensdag</th>
+              <th>🥇 Programma Veteranen (Wo)</th>
+              <th style="width:72px;">Donderdag</th>
+              <th>🏆 Programma Senioren (Do)</th>
+              <th style="width:72px;">Zondag</th>
+              <th>⚡ / 🏆 Zondag (Jeugd / Finales)</th>
+              ${isAdmin ? '<th style="width:36px;"></th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+            ${(appData.zomerprogramma || []).map((z, idx) => `
+              <tr style="${z.zonTask && z.zonTask !== '-' ? 'background:#fefce8;' : ''}">
+                <td><strong>${isAdmin ? `<input type="text" value="${z.week}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; font-weight:800;" onchange="updateZomerRow(${idx}, 'week', this.value)">` : z.week}</strong></td>
+                <td>${isAdmin ? `<input type="text" value="${z.note || ''}" placeholder="-" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.76rem;" onchange="updateZomerRow(${idx}, 'note', this.value)">` : (z.note || '')}</td>
+                <td><strong>${isAdmin ? `<input type="text" value="${z.woDate}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateZomerRow(${idx}, 'woDate', this.value)">` : z.woDate}</strong></td>
+                <td>${isAdmin ? `<select style="width:100%; padding:3px 5px; border:1px solid #cbd5e1; border-radius:4px; font-weight:${z.vetTask !== '-' ? '700' : '400'}; background:${z.vetTask !== '-' ? '#f0fdf4' : 'white'};" onchange="updateZomerRow(${idx}, 'vetTask', this.value)">${buildZomerTaskOptions('vet', z.vetTask)}</select>` : z.vetTask}</td>
+                <td><strong>${isAdmin ? `<input type="text" value="${z.doDate}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateZomerRow(${idx}, 'doDate', this.value)">` : z.doDate}</strong></td>
+                <td>${isAdmin ? `<select style="width:100%; padding:3px 5px; border:1px solid #cbd5e1; border-radius:4px; font-weight:${z.senTask !== '-' ? '700' : '400'}; background:${z.senTask !== '-' ? '#eff6ff' : 'white'};" onchange="updateZomerRow(${idx}, 'senTask', this.value)">${buildZomerTaskOptions('sen', z.senTask)}</select>` : z.senTask}</td>
+                <td><strong>${isAdmin ? `<input type="text" value="${z.zoDate}" style="width:100%; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;" onchange="updateZomerRow(${idx}, 'zoDate', this.value)">` : z.zoDate}</strong></td>
+                <td>${isAdmin ? `<select style="width:100%; padding:3px 5px; border:1px solid #cbd5e1; border-radius:4px; font-weight:${z.zonTask !== '-' ? '800' : '400'}; background:${z.zonTask !== '-' ? '#fef3c7' : 'white'};" onchange="updateZomerRow(${idx}, 'zonTask', this.value)">${buildZomerTaskOptions('zon', z.zonTask)}</select>` : z.zonTask}</td>
+                ${isAdmin ? `<td style="text-align:center;"><button class="btn btn-sm" style="color:#dc2626; padding:1px 5px;" onclick="removeZomerWeekRow(${idx})">&times;</button></td>` : ''}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
       </div>
 
       <!-- BLOK 2: REGLEMENTEN NAAST ELKAAR (BEWERKBAAR) -->
@@ -3290,6 +3573,46 @@ async function updateInviteMeta(field, val) {
   if (!currentUser) return;
   appData.inviteMeta[field] = val.trim();
   await saveState();
+}
+
+
+async function updateZomerRow(idx, field, val) {
+  if (!currentUser) return;
+  appData.zomerprogramma[idx][field] = val.trim();
+  if (["vetTask", "senTask", "zonTask"].includes(field)) renderReglementen();
+  await saveState();
+}
+
+async function addZomerWeekRow() {
+  if (!currentUser) return;
+  appData.zomerprogramma.push({
+    week: "Week " + (14 + appData.zomerprogramma.length),
+    note: "",
+    woDate: "-",
+    vetTask: "-",
+    doDate: "-",
+    senTask: "-",
+    zoDate: "-",
+    zonTask: "-"
+  });
+  renderReglementen();
+  await saveState();
+}
+
+async function removeZomerWeekRow(idx) {
+  if (!currentUser) return;
+  appData.zomerprogramma.splice(idx, 1);
+  renderReglementen();
+  await saveState();
+}
+
+async function resetZomerprogrammaForSeason() {
+  if (!currentUser) return;
+  if (confirm(`Zomerprogramma-data automatisch berekenen voor seizoen ${activeSeason}?`)) {
+    appData.zomerprogramma = createDefaultZomerprogramma(activeSeason);
+    renderReglementen();
+    await saveState();
+  }
 }
 
 async function updateWedstrijddag(idx, field, val) {
@@ -3388,6 +3711,51 @@ function printReglementenPdf(mode) {
       <div class="pdf-rules-box">
         <strong>Opmerking:</strong> ${appData.reglementenNote || ''}
       </div>
+    `;
+  } else if (mode === "weekkalender") {
+    const zList = appData.zomerprogramma || [];
+    pdfDiv.innerHTML = `
+      <div class="pdf-banner">
+        <div>
+          <h2>📆 ZOMERPROGRAMMA WEDSTRIJDDAGEN KTO CUP ${activeSeason}</h2>
+          <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+            Klootschietersbond Twente Oost &bull; Weekoverzicht Veteranen (Wo), Senioren (Do) &amp; Cupfinales (Zo)
+          </div>
+        </div>
+        <div class="pdf-meta-right">
+          <div>Seizoen ${activeSeason}</div>
+          <div>Finaledag: ${finDate} (${fd.venue})</div>
+        </div>
+      </div>
+
+      <table class="pdf-ref-table">
+        <thead>
+          <tr>
+            <th>Week</th>
+            <th>Bijzonderheid</th>
+            <th>Woensdag</th>
+            <th>🥇 Programma Veteranen</th>
+            <th>Donderdag</th>
+            <th>🏆 Programma Senioren</th>
+            <th>Zondag</th>
+            <th>Zondag Programma</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${zList.map(z => `
+            <tr>
+              <td><strong>${z.week}</strong></td>
+              <td>${z.note || ''}</td>
+              <td><strong>${z.woDate}</strong></td>
+              <td>${z.vetTask}</td>
+              <td><strong>${z.doDate}</strong></td>
+              <td>${z.senTask}</td>
+              <td><strong>${z.zoDate}</strong></td>
+              <td><strong>${z.zonTask}</strong></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
     `;
   } else {
     const senVetRules = appData.reglementSenVet || [];
