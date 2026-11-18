@@ -882,6 +882,38 @@ function ensureSeasonExtensions(dataObj, seasonLabel) {
       contactJeugd: "martin@rolink.org"
     };
   }
+  const yearMatch = (seasonLabel || "2026/2027").match(/20\d{2}/g);
+  const playYear = yearMatch ? parseInt(yearMatch[yearMatch.length - 1]) : 2027;
+  const fd = dataObj.finaledag || createDefaultFinaledag(seasonLabel);
+  const meta = dataObj.inviteMeta;
+
+  if (typeof dataObj.reglementenNote !== "string") {
+    dataObj.reglementenNote = "Rekening houden met competitieprogramma afdeling Dames (zij spelen vrijwel elke dinsdagavond). In onderling overleg mag een wedstrijd eerder worden gespeeld (mits gemeld aan WC & scheidsrechter).";
+  }
+  if (!Array.isArray(dataObj.reglementSenVet)) {
+    dataObj.reglementSenVet = [
+      { titel: "Teamsamenstelling", tekst: "8 personen per team. Bij Senioren max. 2 junioren per vereniging (1 team). Bij Veteranen 8 personen per team; meerdere teams per vereniging toegestaan (vrije teamindeling)." },
+      { titel: "Speeldagen & Tijden", tekst: "Veteranen op woensdag, Senioren op donderdag. Vóór 1 mei aanvang 19:00 uur. Na 1 mei: Veteranen 19:15 uur en Senioren 19:30 uur." },
+      { titel: "Spelvorm", tekst: "3 rondes aaneengesloten (3 worpen per speler). Aanloop bij de meetlat in de lengterichting (NKB-reglement). Volgorde mag in de 2e of 3e ronde gewijzigd worden." },
+      { titel: "Invallers", tekst: "Meerdere invallers per wedstrijd toegestaan (ook bij blessure/ziekte tijdens de wedstrijd; junior mag alleen vervangen worden door een andere junior)." },
+      { titel: "Scheidsrechter & Vergoeding", tekst: "Neutrale scheidsrechter aangewezen door WC. Vergoeding € 10,- te betalen door thuisclub vóór aanvang (bij beslissingswedstrijd 50/50). Boete bij verstek of vergeten kennisgeving: € 12,-." },
+      { titel: "Hulpleiders", tekst: "Elke vereniging zorgt voor 2 niet-meespelende hulpleiders (stok in de lengte leggen)." },
+      { titel: "Beslissingswedstrijden", tekst: `Op neutrale baan (${fd.neutralVenue}).` },
+      { titel: "Uitslag doorgeven", tekst: `Thuisclub geeft op de speeldag uitslag en kort verslag door aan ${meta.contactSenVet}.` }
+    ];
+  }
+  if (!Array.isArray(dataObj.reglementJunioren)) {
+    dataObj.reglementJunioren = [
+      { titel: "Teamsamenstelling", tekst: "6 personen per team. Een junior mag slechts 1 keer per wedstrijddag worden opgesteld." },
+      { titel: `Leeftijdsgrenzen (${playYear})`, tekst: `CUP-klasse: Totaalleeftijd maximaal 96 jaar. | A-klasse: Totaalleeftijd maximaal 78 jaar, oudste speler max. 15 jr (geb. ${playYear - 15}). | B-klasse: Totaalleeftijd maximaal 64 jaar, oudste speler max. 13 jr (geb. ${playYear - 13}). (Bij meisjes wordt per speelster 1 jaar in mindering gebracht voor de telling.)` },
+      { titel: "Speeldag & Tijd", tekst: "Zoveel mogelijk op maandag om 19:00 uur." },
+      { titel: "Spelvorm", tekst: "4 rondes aaneengesloten (4 worpen per speler). Volgorde mag in 2e, 3e of 4e ronde gewijzigd worden." },
+      { titel: "Invallers", tekst: "Maximaal 1 invaller per wedstrijd toegestaan." },
+      { titel: "Leiding", tekst: "Voor elkaar leiden (gelijk aan competitie). De finale wordt geleid door een neutrale scheidsrechter (geen neutrale stokleggers)." },
+      { titel: "Beslissingswedstrijden", tekst: `Op neutrale baan (${fd.neutralVenue}).` },
+      { titel: "Uitslag doorgeven", tekst: `Thuisclub geeft op de speeldag uitslag en kort verslag door aan ${meta.contactSenVet} (opgave jeugd via ${meta.contactJeugd}).` }
+    ];
+  }
 }
 
 function createEmptySeasonTemplate(seasonLabel) {
@@ -3004,12 +3036,8 @@ function renderReglementen() {
   const fd = appData.finaledag;
   const meta = appData.inviteMeta;
   const wDagen = appData.wedstrijddagen || createDefaultWedstrijddagen();
-
-  // Bereken geboortejaren automatisch o.b.v. het eindjaar van het actieve seizoen (bijv. 2026/2027 -> 2027)
-  const yearMatch = activeSeason.match(/20\d{2}/g);
-  const playYear = yearMatch ? parseInt(yearMatch[yearMatch.length - 1]) : 2027;
-  const gebJaarA = playYear - 15;
-  const gebJaarB = playYear - 13;
+  const senVetRules = appData.reglementSenVet || [];
+  const junRules = appData.reglementJunioren || [];
 
   let html = `
     <div class="card">
@@ -3065,52 +3093,98 @@ function renderReglementen() {
             `).join("")}
           </tbody>
         </table>
-        <p style="font-size:0.75rem; color:#64748b; margin-top:5px;">
-          ℹ️ Rekening houden met competitieprogramma afdeling Dames (zij spelen vrijwel elke dinsdagavond). In onderling overleg mag een wedstrijd eerder worden gespeeld (mits gemeld aan WC &amp; scheidsrechter).
-        </p>
+        <div style="font-size:0.78rem; color:#64748b; margin-top:6px; display:flex; align-items:center; gap:6px;">
+          <span>ℹ️</span>
+          ${isAdmin
+            ? `<input type="text" value="${appData.reglementenNote || ''}" style="flex:1; padding:4px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.78rem; color:#334155;" onchange="updateReglementenNote(this.value)">`
+            : `<span>${appData.reglementenNote || ''}</span>`}
+        </div>
       </div>
 
-      <!-- BLOK 2: REGLEMENTEN NAAST ELKAAR -->
+      <!-- BLOK 2: REGLEMENTEN NAAST ELKAAR (BEWERKBAAR) -->
       <div class="loting-grid">
         <!-- SENIOREN & VETERANEN -->
         <div class="poule-box" style="border-top: 4px solid var(--primary);">
-          <h3 style="color:var(--primary); font-size:1rem; margin-bottom:8px;">🏆 Reglement Senioren &amp; Veteranen</h3>
-          <ul style="padding-left:18px; font-size:0.81rem; line-height:1.55; color:#1e293b;">
-            <li><strong>Teamsamenstelling:</strong> 8 personen per team. Bij Senioren max. 2 junioren per vereniging (1 team). Bij Veteranen 8 personen per team; meerdere teams per vereniging toegestaan (vrije teamindeling).</li>
-            <li><strong>Speeldagen &amp; Tijden:</strong> Veteranen op woensdag, Senioren op donderdag. Vóór 1 mei aanvang <strong>19:00 uur</strong>. Na 1 mei: Veteranen <strong>19:15 uur</strong> en Senioren <strong>19:30 uur</strong>.</li>
-            <li><strong>Spelvorm:</strong> 3 rondes aaneengesloten (3 worpen per speler). Aanloop bij de meetlat in de lengterichting (NKB-reglement). Volgorde mag in de 2e of 3e ronde gewijzigd worden.</li>
-            <li><strong>Invallers:</strong> Meerdere invallers per wedstrijd toegestaan (ook bij blessure/ziekte tijdens de wedstrijd; junior mag alleen vervangen worden door een andere junior).</li>
-            <li><strong>Scheidsrechter &amp; Vergoeding:</strong> Neutrale scheidsrechter aangewezen door WC. Vergoeding <strong>€ 10,-</strong> te betalen door thuisclub vóór aanvang (bij beslissingswedstrijd 50/50). Boete bij verstek of vergeten kennisgeving: <strong>€ 12,-</strong>.</li>
-            <li><strong>Hulpleiders:</strong> Elke vereniging zorgt voor 2 niet-meespelende hulpleiders (stok in de lengte leggen).</li>
-            <li><strong>Beslissingswedstrijden:</strong> Op neutrale baan (<strong>${fd.neutralVenue}</strong>).</li>
-            <li><strong>Uitslag doorgeven:</strong> Thuisclub geeft op de speeldag uitslag en kort verslag door aan <strong>${meta.contactSenVet}</strong>.</li>
-          </ul>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px;">
+            <h3 style="color:var(--primary); font-size:1rem; margin:0;">🏆 Reglement Senioren &amp; Veteranen</h3>
+            ${isAdmin ? `<button class="btn btn-primary btn-sm" onclick="addReglementRule('reglementSenVet')">+ Regel toevoegen</button>` : ''}
+          </div>
+          ${isAdmin ? `
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              ${senVetRules.map((r, idx) => `
+                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:7px 9px;">
+                  <div style="display:flex; gap:6px; margin-bottom:4px; align-items:center;">
+                    <input type="text" value="${r.titel}" placeholder="Onderwerp..." style="flex:1; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px; font-weight:800; font-size:0.8rem; color:var(--primary);" onchange="updateReglementRule('reglementSenVet', ${idx}, 'titel', this.value)">
+                    <button class="btn btn-sm" style="color:#dc2626; padding:1px 6px;" title="Verwijderen" onclick="removeReglementRule('reglementSenVet', ${idx})">&times;</button>
+                  </div>
+                  <textarea rows="2" style="width:100%; padding:4px 6px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.8rem; line-height:1.4; resize:vertical;" onchange="updateReglementRule('reglementSenVet', ${idx}, 'tekst', this.value)">${r.tekst}</textarea>
+                </div>
+              `).join("")}
+            </div>
+          ` : `
+            <ul style="padding-left:18px; font-size:0.81rem; line-height:1.55; color:#1e293b;">
+              ${senVetRules.map(r => `<li style="margin-bottom:4px;"><strong>${r.titel}:</strong> ${r.tekst}</li>`).join("")}
+            </ul>
+          `}
         </div>
 
         <!-- JUNIOREN -->
         <div class="poule-box" style="border-top: 4px solid var(--accent);">
-          <h3 style="color:#92400e; font-size:1rem; margin-bottom:8px;">⚡ Reglement Junioren (Cup / A / B Klasse)</h3>
-          <ul style="padding-left:18px; font-size:0.81rem; line-height:1.55; color:#1e293b;">
-            <li><strong>Teamsamenstelling:</strong> <strong>6 personen</strong> per team. Een junior mag slechts 1 keer per wedstrijddag worden opgesteld.</li>
-            <li><strong>Leeftijdsgrenzen (${playYear}):</strong>
-              <br>&bull; <strong>CUP-klasse:</strong> Totaalleeftijd maximaal <strong>96 jaar</strong>.
-              <br>&bull; <strong>A-klasse:</strong> Totaalleeftijd maximaal <strong>78 jaar</strong>, oudste speler max. 15 jr (geb. <strong>${gebJaarA}</strong>).
-              <br>&bull; <strong>B-klasse:</strong> Totaalleeftijd maximaal <strong>64 jaar</strong>, oudste speler max. 13 jr (geb. <strong>${gebJaarB}</strong>).
-              <br><em>(Bij meisjes wordt per speelster 1 jaar in mindering gebracht voor de telling.)</em>
-            </li>
-            <li><strong>Speeldag &amp; Tijd:</strong> Zoveel mogelijk op <strong>maandag om 19:00 uur</strong>.</li>
-            <li><strong>Spelvorm:</strong> <strong>4 rondes</strong> aaneengesloten (4 worpen per speler). Volgorde mag in 2e, 3e of 4e ronde gewijzigd worden.</li>
-            <li><strong>Invallers:</strong> Maximaal <strong>1 invaller</strong> per wedstrijd toegestaan.</li>
-            <li><strong>Leiding:</strong> Voor elkaar leiden (gelijk aan competitie). De finale wordt geleid door een neutrale scheidsrechter (geen neutrale stokleggers).</li>
-            <li><strong>Beslissingswedstrijden:</strong> Op neutrale baan (<strong>${fd.neutralVenue}</strong>).</li>
-            <li><strong>Uitslag doorgeven:</strong> Thuisclub geeft op de speeldag uitslag en kort verslag door aan <strong>${meta.contactSenVet}</strong> (opgave jeugd via <strong>${meta.contactJeugd}</strong>).</li>
-          </ul>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px;">
+            <h3 style="color:#92400e; font-size:1rem; margin:0;">⚡ Reglement Junioren (Cup / A / B Klasse)</h3>
+            ${isAdmin ? `<button class="btn btn-accent btn-sm" onclick="addReglementRule('reglementJunioren')">+ Regel toevoegen</button>` : ''}
+          </div>
+          ${isAdmin ? `
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              ${junRules.map((r, idx) => `
+                <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:7px 9px;">
+                  <div style="display:flex; gap:6px; margin-bottom:4px; align-items:center;">
+                    <input type="text" value="${r.titel}" placeholder="Onderwerp..." style="flex:1; padding:3px 6px; border:1px solid #fcd34d; border-radius:4px; font-weight:800; font-size:0.8rem; color:#92400e; background:white;" onchange="updateReglementRule('reglementJunioren', ${idx}, 'titel', this.value)">
+                    <button class="btn btn-sm" style="color:#dc2626; padding:1px 6px;" title="Verwijderen" onclick="removeReglementRule('reglementJunioren', ${idx})">&times;</button>
+                  </div>
+                  <textarea rows="2" style="width:100%; padding:4px 6px; border:1px solid #fcd34d; border-radius:4px; font-size:0.8rem; line-height:1.4; resize:vertical; background:white;" onchange="updateReglementRule('reglementJunioren', ${idx}, 'tekst', this.value)">${r.tekst}</textarea>
+                </div>
+              `).join("")}
+            </div>
+          ` : `
+            <ul style="padding-left:18px; font-size:0.81rem; line-height:1.55; color:#1e293b;">
+              ${junRules.map(r => `<li style="margin-bottom:4px;"><strong>${r.titel}:</strong> ${r.tekst}</li>`).join("")}
+            </ul>
+          `}
         </div>
       </div>
     </div>
   `;
 
   document.getElementById("mainContent").innerHTML = html;
+}
+
+async function updateReglementenNote(val) {
+  if (!currentUser) return;
+  appData.reglementenNote = val.trim();
+  await saveState();
+}
+
+async function updateReglementRule(listKey, idx, field, val) {
+  if (!currentUser) return;
+  appData[listKey][idx][field] = val.trim();
+  await saveState();
+}
+
+async function addReglementRule(listKey) {
+  if (!currentUser) return;
+  appData[listKey].push({ titel: "Nieuwe bepaling", tekst: "Vul hier de tekst in..." });
+  renderReglementen();
+  await saveState();
+}
+
+async function removeReglementRule(listKey, idx) {
+  if (!currentUser) return;
+  if (confirm(`Reglementpunt "${appData[listKey][idx].titel}" verwijderen?`)) {
+    appData[listKey].splice(idx, 1);
+    renderReglementen();
+    await saveState();
+  }
 }
 
 async function updateInviteMeta(field, val) {
@@ -3176,6 +3250,8 @@ function printReglementenPdf(mode) {
       </div>
     `;
   } else {
+    const senVetRules = appData.reglementSenVet || [];
+    const junRules = appData.reglementJunioren || [];
     pdfDiv.innerHTML = `
       <div class="pdf-banner">
         <div>
@@ -3194,25 +3270,13 @@ function printReglementenPdf(mode) {
         <div style="border:1px solid #64748b; border-radius:6px; padding:10px;">
           <h3 style="color:#0f5132; margin-bottom:6px;">Senioren &amp; Veteranen</h3>
           <ul style="padding-left:16px;">
-            <li><strong>Teams:</strong> 8 personen (Senioren max. 2 junioren, 1 team; Veteranen meerdere teams mogelijk, vrije indeling).</li>
-            <li><strong>Speeldagen:</strong> Veteranen woensdag, Senioren donderdag. Vóór 1 mei 19:00 uur; na 1 mei Vet 19:15 uur, Sen 19:30 uur.</li>
-            <li><strong>Spelvorm:</strong> 3 rondes aaneen (3 worpen p.p.). Aanloop bij meetlat in lengterichting.</li>
-            <li><strong>Scheidsrechter:</strong> Vergoeding € 10,- door thuisclub (beslissing 50/50). Boete verstek/vergeten: € 12,-.</li>
-            <li><strong>Hulpleiders:</strong> 2 niet-meespelende hulpleiders per team (stok in de lengte leggen).</li>
-            <li><strong>Invallers:</strong> Meerdere invallers toegestaan (junior alleen door junior).</li>
-            <li><strong>Uitslag:</strong> Thuisclub mailt op speeldag uitslag + verslag naar ${meta.contactSenVet}.</li>
+            ${senVetRules.map(r => `<li style="margin-bottom:3px;"><strong>${r.titel}:</strong> ${r.tekst}</li>`).join("")}
           </ul>
         </div>
         <div style="border:1px solid #64748b; border-radius:6px; padding:10px;">
           <h3 style="color:#92400e; margin-bottom:6px;">Junioren (Cup / A / B Klasse)</h3>
           <ul style="padding-left:16px;">
-            <li><strong>Teams:</strong> 6 personen per team. Max. 1 keer per wedstrijddag opstellen.</li>
-            <li><strong>Leeftijd (${playYear}):</strong> CUP max. 96 jr | A max. 78 jr (max 15 jr / geb. ${playYear - 15}) | B max. 64 jr (max 13 jr / geb. ${playYear - 13}). Meisjes -1 jr.</li>
-            <li><strong>Speeldag:</strong> Zoveel mogelijk op maandag om 19:00 uur.</li>
-            <li><strong>Spelvorm:</strong> 4 rondes aaneen (4 worpen p.p.). Volgorde vrij te wijzigen in ronde 2, 3 of 4.</li>
-            <li><strong>Invallers:</strong> Max. 1 invaller per wedstrijd toegestaan.</li>
-            <li><strong>Leiding:</strong> Voor elkaar leiden (finale neutrale scheidsrechter, geen neutrale stokleggers).</li>
-            <li><strong>Uitslag:</strong> Thuisclub mailt op speeldag uitslag + verslag naar ${meta.contactSenVet}.</li>
+            ${junRules.map(r => `<li style="margin-bottom:3px;"><strong>${r.titel}:</strong> ${r.tekst}</li>`).join("")}
           </ul>
         </div>
       </div>
