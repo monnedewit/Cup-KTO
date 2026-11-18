@@ -187,11 +187,11 @@
     border-radius: 8px;
   }
   .pdf-banner {
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 3px solid var(--primary); padding-bottom: 12px; margin-bottom: 18px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    border-bottom: 2.5px solid var(--primary); padding-bottom: 7px; margin-bottom: 11px;
   }
-  .pdf-banner h2 { font-size: 1.5rem; color: var(--primary); font-weight: 900; }
-  .pdf-banner .pdf-meta-right { text-align: right; font-size: 0.85rem; color: #334155; font-weight: 700; }
+  .pdf-banner h2 { font-size: 1.12rem; color: var(--primary); font-weight: 900; line-height: 1.2; }
+  .pdf-banner .pdf-meta-right { text-align: right; font-size: 0.76rem; color: #334155; font-weight: 700; line-height: 1.3; flex-shrink: 0; }
 
   /* Print Bracket Styling (mirrors official KTO PDF sheet cleanly) */
   .pdf-bracket-grid {
@@ -2408,7 +2408,7 @@ function generateAndPrintPdf() {
       <div class="pdf-banner">
         <div>
           <h2>🏆 KTO CUP ${activeSeason} – SENIOREN</h2>
-          <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+          <div style="font-size:0.78rem; color:#475569; font-weight:700; margin-top:2px;">
             Klootschietersbond Twente Oost &bull; ${roundFilter === 'all' ? 'Volledig Toernooischema' : 'Overzicht t/m ' + roundFilter}
           </div>
         </div>
@@ -2532,7 +2532,7 @@ function generateAndPrintPdf() {
       <div class="pdf-banner">
         <div>
           <h2>🏆 KTO CUP ${activeSeason} – ${comp.title.toUpperCase()}</h2>
-          <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+          <div style="font-size:0.78rem; color:#475569; font-weight:700; margin-top:2px;">
             Klootschietersbond Twente Oost &bull; Poule-indeling, Speelschema &amp; Scheidsrechters
           </div>
         </div>
@@ -3273,7 +3273,7 @@ function printDraaiboekPdf() {
     <div class="pdf-banner">
       <div>
         <h2>🏁 DRAAIBOEK KTO CUPFINALES ${activeSeason}</h2>
-        <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+        <div style="font-size:0.78rem; color:#475569; font-weight:700; margin-top:2px;">
           Klootschietersbond Twente Oost &bull; Organiserende vereniging / baan: <strong>${fd.venue}</strong>
         </div>
       </div>
@@ -3633,7 +3633,7 @@ function printReglementenPdf(mode) {
       <div class="pdf-banner">
         <div>
           <h2>🏆 UITNODIGING KTO CUP ${activeSeason}</h2>
-          <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+          <div style="font-size:0.78rem; color:#475569; font-weight:700; margin-top:2px;">
             Klootschietersbond Twente Oost (KTO) &bull; Aan het bestuur van alle aangesloten verenigingen
           </div>
         </div>
@@ -3675,7 +3675,7 @@ function printReglementenPdf(mode) {
       <div class="pdf-banner">
         <div>
           <h2>📅 VASTE SPEELDAGEN &amp; AANVANGSTIJDEN KTO CUP ${activeSeason}</h2>
-          <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+          <div style="font-size:0.78rem; color:#475569; font-weight:700; margin-top:2px;">
             Klootschietersbond Twente Oost &bull; Neutrale baan: ${fd.neutralVenue} &bull; Finalebaan: ${fd.venue}
           </div>
         </div>
@@ -3712,28 +3712,40 @@ function printReglementenPdf(mode) {
     `;
   } else if (mode === "weekkalender") {
     const zList = appData.zomerprogramma || [];
+    const formatCellText = (raw) => {
+      if (!raw || raw === "-") return "";
+      return raw
+        .replace(/^Veteranen\s+/i, "")
+        .replace(/^Senioren\s+/i, "")
+        .replace(/Bevrijdingsdag/gi, "Bevrijdings-dag")
+        .replace(/Koningsdag/gi, "Konings-dag")
+        .replace(/Pinksterdag/gi, "Pinkster-dag")
+        .replace(/Kwartfinale/gi, "Kwart-finale")
+        .replace(/Cupfinales/gi, "Cup-finales");
+    };
+
     pdfDiv.innerHTML = `
-      <div class="pdf-banner" style="margin-bottom:12px; padding-bottom:8px;">
+      <div class="pdf-banner">
         <div>
-          <h2 style="font-size:1.35rem;">📆 ZOMERPROGRAMMA WEDSTRIJDDAGEN KTO CUP ${activeSeason}</h2>
-          <div style="font-size:0.84rem; color:#475569; font-weight:700; margin-top:2px;">
+          <h2>📆 ZOMERPROGRAMMA WEDSTRIJDDAGEN KTO CUP ${activeSeason}</h2>
+          <div style="font-size:0.78rem; color:#475569; font-weight:700; margin-top:2px;">
             Klootschietersbond Twente Oost &bull; Overzicht per week (Woensdag Veteranen &bull; Donderdag Senioren &bull; Zondag Finales)
           </div>
         </div>
         <div class="pdf-meta-right">
           <div>Seizoen ${activeSeason}</div>
-          <div style="font-size:0.78rem;">Finaledag: ${finDate} (${fd.venue})</div>
+          <div>Finaledag: ${finDate} (${fd.venue})</div>
         </div>
       </div>
 
-      <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:0.68rem; text-align:center;">
+      <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:0.64rem; text-align:center;">
         <thead>
           <tr>
-            <th style="width:74px; background:#0f5132; color:white; border:1px solid #334155; padding:6px 4px; text-align:left;">Week</th>
+            <th style="width:62px; background:#0f5132; color:white; border:1px solid #334155; padding:5px 4px; text-align:left; font-size:0.7rem;">Week</th>
             ${zList.map(z => `
-              <th style="background:#0f5132; color:white; border:1px solid #334155; padding:5px 2px; font-weight:900;">
-                ${z.week.replace('Week ', '')}
-                ${z.note ? `<div style="font-size:0.56rem; font-weight:700; color:#fef08a; line-height:1.1; margin-top:2px;">${z.note}</div>` : ''}
+              <th style="background:#0f5132; color:white; border:1px solid #334155; padding:4px 2px; font-weight:900; vertical-align:top; overflow-wrap:break-word; word-break:break-word;">
+                <div style="font-size:0.74rem;">${z.week.replace('Week ', '')}</div>
+                ${z.note ? `<div style="font-size:0.5rem; font-weight:700; color:#fef08a; line-height:1.12; margin-top:2px;">${formatCellText(z.note)}</div>` : ''}
               </th>
             `).join("")}
           </tr>
@@ -3741,18 +3753,18 @@ function printReglementenPdf(mode) {
         <tbody>
           <!-- RIJ 1: WOENSDAG (VETERANEN) -->
           <tr>
-            <td style="background:#f1f5f9; border:1px solid #475569; padding:8px 5px; font-weight:900; text-align:left; color:#0f5132;">
-              Woensdag<br><span style="font-size:0.6rem; font-weight:600; color:#475569;">Veteranen</span>
+            <td style="background:#f1f5f9; border:1px solid #475569; padding:6px 4px; font-weight:900; text-align:left; color:#0f5132; font-size:0.68rem;">
+              Woensdag<br><span style="font-size:0.56rem; font-weight:600; color:#475569;">Veteranen</span>
             </td>
             ${zList.map(z => {
               const hasTask = z.vetTask && z.vetTask !== "-";
               const isHol = z.vetTask && z.vetTask.includes("geen wed");
               const bg = isHol ? "#fee2e2" : (hasTask ? "#dcfce7" : "#ffffff");
-              const txt = hasTask ? z.vetTask.replace("Veteranen ", "") : "";
+              const txt = formatCellText(z.vetTask);
               return `
-                <td style="border:1px solid #475569; padding:5px 2px; vertical-align:top; background:${bg}; height:78px;">
-                  <div style="font-weight:900; font-size:0.74rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:3px; margin-bottom:4px;">${z.woDate}</div>
-                  <div style="font-weight:700; font-size:0.63rem; line-height:1.15; color:${isHol ? '#991b1b' : '#065f46'};">${txt}</div>
+                <td style="border:1px solid #475569; padding:4px 2px; vertical-align:top; background:${bg}; height:74px; overflow-wrap:break-word; word-break:break-word;">
+                  <div style="font-weight:900; font-size:0.7rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:2px; margin-bottom:3px;">${z.woDate}</div>
+                  <div style="font-weight:700; font-size:0.56rem; line-height:1.15; color:${isHol ? '#991b1b' : '#065f46'};">${txt}</div>
                 </td>
               `;
             }).join("")}
@@ -3760,18 +3772,18 @@ function printReglementenPdf(mode) {
 
           <!-- RIJ 2: DONDERDAG (SENIOREN) -->
           <tr>
-            <td style="background:#f1f5f9; border:1px solid #475569; padding:8px 5px; font-weight:900; text-align:left; color:#1e40af;">
-              Donderdag<br><span style="font-size:0.6rem; font-weight:600; color:#475569;">Senioren</span>
+            <td style="background:#f1f5f9; border:1px solid #475569; padding:6px 4px; font-weight:900; text-align:left; color:#1e40af; font-size:0.68rem;">
+              Donderdag<br><span style="font-size:0.56rem; font-weight:600; color:#475569;">Senioren</span>
             </td>
             ${zList.map(z => {
               const hasTask = z.senTask && z.senTask !== "-";
               const isHol = z.senTask && z.senTask.includes("geen wed");
               const bg = isHol ? "#fee2e2" : (hasTask ? "#dbeafe" : "#ffffff");
-              const txt = hasTask ? z.senTask.replace("Senioren ", "") : "";
+              const txt = formatCellText(z.senTask);
               return `
-                <td style="border:1px solid #475569; padding:5px 2px; vertical-align:top; background:${bg}; height:78px;">
-                  <div style="font-weight:900; font-size:0.74rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:3px; margin-bottom:4px;">${z.doDate}</div>
-                  <div style="font-weight:700; font-size:0.63rem; line-height:1.15; color:${isHol ? '#991b1b' : '#1e3a8a'};">${txt}</div>
+                <td style="border:1px solid #475569; padding:4px 2px; vertical-align:top; background:${bg}; height:74px; overflow-wrap:break-word; word-break:break-word;">
+                  <div style="font-weight:900; font-size:0.7rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:2px; margin-bottom:3px;">${z.doDate}</div>
+                  <div style="font-weight:700; font-size:0.56rem; line-height:1.15; color:${isHol ? '#991b1b' : '#1e3a8a'};">${txt}</div>
                 </td>
               `;
             }).join("")}
@@ -3779,17 +3791,18 @@ function printReglementenPdf(mode) {
 
           <!-- RIJ 3: ZONDAG (CUPFINALES / JEUGD) -->
           <tr>
-            <td style="background:#f1f5f9; border:1px solid #475569; padding:8px 5px; font-weight:900; text-align:left; color:#92400e;">
-              Zondag<br><span style="font-size:0.6rem; font-weight:600; color:#475569;">Finales / Jeugd</span>
+            <td style="background:#f1f5f9; border:1px solid #475569; padding:6px 4px; font-weight:900; text-align:left; color:#92400e; font-size:0.68rem;">
+              Zondag<br><span style="font-size:0.56rem; font-weight:600; color:#475569;">Finales / Jeugd</span>
             </td>
             ${zList.map(z => {
               const hasTask = z.zonTask && z.zonTask !== "-";
               const isFin = z.zonTask && z.zonTask.includes("Cupfinales");
               const bg = isFin ? "#fef08a" : (hasTask ? "#fef3c7" : "#ffffff");
+              const txt = formatCellText(z.zonTask);
               return `
-                <td style="border:1px solid #475569; padding:5px 2px; vertical-align:top; background:${bg}; height:66px;">
-                  <div style="font-weight:900; font-size:0.74rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:3px; margin-bottom:4px;">${z.zoDate}</div>
-                  <div style="font-weight:800; font-size:0.63rem; line-height:1.15; color:#92400e;">${hasTask ? z.zonTask : ''}</div>
+                <td style="border:1px solid #475569; padding:4px 2px; vertical-align:top; background:${bg}; height:62px; overflow-wrap:break-word; word-break:break-word;">
+                  <div style="font-weight:900; font-size:0.7rem; color:#0f172a; border-bottom:1px dashed #cbd5e1; padding-bottom:2px; margin-bottom:3px;">${z.zoDate}</div>
+                  <div style="font-weight:800; font-size:0.56rem; line-height:1.15; color:#92400e;">${txt}</div>
                 </td>
               `;
             }).join("")}
@@ -3797,7 +3810,7 @@ function printReglementenPdf(mode) {
         </tbody>
       </table>
 
-      <div class="pdf-rules-box" style="margin-top:12px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <div class="pdf-rules-box" style="margin-top:10px; padding:7px 12px; font-size:0.72rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
         <span><strong>Aanvangstijden:</strong> Vóór 1 mei om 19:00 uur &bull; Na 1 mei: Veteranen 19:15 uur en Senioren 19:30 uur &bull; Junioren maandag 19:00 uur.</span>
         <span><strong>Neutrale baan:</strong> ${fd.neutralVenue} &bull; <strong>Finalebaan:</strong> ${fd.venue}</span>
       </div>
@@ -3809,7 +3822,7 @@ function printReglementenPdf(mode) {
       <div class="pdf-banner">
         <div>
           <h2>📜 REGLEMENTEN KTO CUP ${activeSeason}</h2>
-          <div style="font-size:0.88rem; color:#475569; font-weight:700; margin-top:2px;">
+          <div style="font-size:0.78rem; color:#475569; font-weight:700; margin-top:2px;">
             Klootschietersbond Twente Oost &bull; Senioren, Veteranen &amp; Junioren
           </div>
         </div>
